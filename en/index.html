@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://upliftorch.com/tools/trade-analysis/en/">
+<link rel="alternate" hreflang="zh-TW" href="https://upliftorch.com/tools/trade-analysis/">
+<link rel="alternate" hreflang="en" href="https://upliftorch.com/tools/trade-analysis/en/">
+<link rel="alternate" hreflang="x-default" href="https://upliftorch.com/tools/trade-analysis/en/">
+<title>Taiwan Trade Data Analysis — Export Trends · Semiconductors · Cross-Strait Trade</title>
+<meta name="description" content="Visualize Taiwan export trends, semiconductor trade, and cross-strait economic dependency using official customs data.">
+<meta name="keywords" content="Taiwan exports,trade analysis,semiconductor exports,cross-strait trade,IC trade,Taiwan economy">
+
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f0f2f5;--bg2:#e4e7ec;--card:#fff;--text:#111827;--text2:#6b7280;--text3:#9ca3af;
+  --primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1d4ed8;
+  --accent:#f97316;--accent-light:#fff7ed;
+  --success:#10b981;--danger:#ef4444;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.08);
+  --radius:12px;--radius-sm:8px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0b0f1a;--bg2:#131829;--card:#1a1f36;--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --primary:#3b82f6;--primary-light:#1e3a5f;--primary-dark:#60a5fa;
+  --accent:#fb923c;--accent-light:#2d1f0e;
+  --success:#34d399;--danger:#f87171;
+  --border:#1e293b;--border2:#334155;
+  --shadow:0 1px 3px rgba(0,0,0,.2);--shadow-lg:0 4px 24px rgba(0,0,0,.3);
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+
+/* Header */
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 50%,#3b82f6 100%);color:#fff;padding:3rem 1.5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero h1{font-size:2rem;font-weight:800;margin-bottom:.4rem;position:relative}
+.hero p{opacity:.8;font-size:.95rem;position:relative}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);padding:.25rem .75rem;border-radius:20px;font-size:.75rem;margin-top:.8rem;position:relative}
+.lang-switch{position:absolute;top:1.2rem;right:1.5rem;color:#fff;text-decoration:none;font-size:.8rem;border:1px solid rgba(255,255,255,.4);padding:.3rem .8rem;border-radius:20px;transition:.2s;z-index:1}
+.lang-switch:hover{background:rgba(255,255,255,.2)}
+
+/* Tabs */
+.tab-bar{display:flex;justify-content:center;gap:.5rem;padding:1rem 1.5rem;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);flex-wrap:wrap}
+.tab-btn{display:flex;align-items:center;gap:.4rem;padding:.55rem 1.2rem;border:none;border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;font-size:.85rem;font-weight:500;transition:.2s}
+.tab-btn:hover{background:var(--primary-light);color:var(--primary)}
+.tab-btn.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+.tab-btn .icon{font-size:1rem}
+
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:1.5rem}
+.breadcrumb{font-size:13px;color:var(--text-secondary,#64748b);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.breadcrumb a{color:var(--text-secondary,#64748b)}
+.breadcrumb a:hover{color:var(--primary,#ec4899)}
+.breadcrumb .sep{opacity:.5}
+.breadcrumb [aria-current]{color:var(--text,#1e293b);font-weight:600}
+.card{background:var(--card);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem}
+.card-header h2{font-size:1.1rem;font-weight:700;color:var(--text)}
+.card-header .tag{font-size:.7rem;background:var(--primary-light);color:var(--primary);padding:.2rem .6rem;border-radius:12px;font-weight:600}
+.card-desc{color:var(--text2);font-size:.82rem;margin-top:.15rem}
+.chart-box{position:relative;width:100%;min-height:340px}
+.chart-box canvas{display:block}
+
+/* Stats */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;margin-bottom:1.25rem}
+.kpi{background:var(--card);border-radius:var(--radius-sm);padding:1rem 1.2rem;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--primary);border-radius:4px 0 0 4px}
+.kpi.warn::before{background:var(--accent)}
+.kpi.danger::before{background:var(--danger)}
+.kpi.success::before{background:var(--success)}
+.kpi .num{font-size:1.5rem;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.kpi .lbl{font-size:.75rem;color:var(--text2);margin-top:.15rem}
+
+/* Controls */
+.ctrl-bar{display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.ctrl-bar label{font-size:.8rem;color:var(--text2);display:flex;align-items:center;gap:.3rem}
+.ctrl-bar select,.ctrl-bar input[type=number]{padding:.4rem .6rem;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:.82rem;outline:none;transition:.2s}
+.ctrl-bar select:focus,.ctrl-bar input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.btn{padding:.45rem 1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:.82rem;font-weight:600;transition:.2s}
+.btn:hover{background:var(--primary-dark);box-shadow:0 2px 8px rgba(37,99,235,.3)}
+
+/* Table */
+.tbl-wrap{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{padding:.55rem .7rem;text-align:right;border-bottom:1px solid var(--border)}
+th{background:var(--bg2);color:var(--text2);font-weight:600;position:sticky;top:0;z-index:1}
+td:first-child,th:first-child{text-align:left;font-weight:600}
+tr:hover td{background:var(--primary-light)}
+.up{color:var(--success)}
+.down{color:var(--danger)}
+
+/* Loading & Error */
+.loading{text-align:center;padding:4rem 1rem;color:var(--text2)}
+.spinner{display:inline-block;width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tab-content{display:none}.tab-content.active{display:block}
+.error-box{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:1.2rem;border-radius:var(--radius-sm);text-align:center}
+@media(prefers-color-scheme:dark){.error-box{background:#2d1215;border-color:#5c2026;color:#fca5a5}}
+
+footer{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:.78rem;border-top:1px solid var(--border)}
+footer a{color:var(--primary);text-decoration:none}
+
+/* Section divider */
+.section-divider{display:flex;align-items:center;gap:.75rem;margin:2rem 0 1rem;padding:0 .2rem}
+.section-divider .section-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.section-divider .section-icon.blue{background:var(--primary-light);color:var(--primary)}
+.section-divider .section-icon.orange{background:var(--accent-light);color:var(--accent)}
+.section-divider .section-icon.green{background:#d1fae5;color:#059669}
+.section-divider .section-icon.purple{background:#ede9fe;color:#7c3aed}
+@media(prefers-color-scheme:dark){
+.section-divider .section-icon.green{background:#064e3b;color:#34d399}
+.section-divider .section-icon.purple{background:#2e1065;color:#a78bfa}
+}
+.section-divider .section-text h3{font-size:.9rem;font-weight:700;color:var(--text)}
+.section-divider .section-text p{font-size:.75rem;color:var(--text3);margin-top:.1rem}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Country pill selector */
+.pill-group{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+.pill{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border-radius:20px;border:1px solid var(--border2);background:var(--card);color:var(--text2);font-size:.8rem;cursor:pointer;transition:.2s;user-select:none}
+.pill:hover{border-color:var(--primary);color:var(--primary)}
+.pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* Heatmap */
+.heatmap-wrap{overflow-x:auto}
+.heatmap{display:grid;grid-template-columns:auto repeat(12,1fr);gap:2px;font-size:.75rem;min-width:500px}
+.heatmap .hm-label{padding:.4rem .5rem;color:var(--text2);font-weight:600;text-align:center;white-space:nowrap}
+.heatmap .hm-cell{padding:.4rem .3rem;text-align:center;border-radius:4px;color:var(--text);font-size:.72rem;min-width:38px;transition:transform .15s}
+.heatmap .hm-cell:hover{transform:scale(1.1);z-index:1}
+.heatmap .hm-header{font-weight:700;color:var(--text2);padding:.3rem .3rem;text-align:center}
+
+@media(max-width:640px){.hero h1{font-size:1.4rem}.kpi-row{grid-template-columns:1fr 1fr}.kpi .num{font-size:1.2rem}.tab-btn{padding:.45rem .8rem;font-size:.78rem}.pill{font-size:.75rem;padding:.3rem .6rem}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://upliftorch.com/"},{"@type":"ListItem","position":2,"name":"Free Online Tools","item":"https://upliftorch.com/tools-en"},{"@type":"ListItem","position":3,"name":"Trade Data Analysis","item":"https://upliftorch.com/tools/trade-analysis/en/"}]}
+</script>
+</head>
+<body>
+
+<div class="hero">
+<a class="lang-switch" href="https://upliftorch.com/tools/trade-analysis/">繁中</a>
+<h1>Taiwan Trade Data Analysis</h1>
+<p>Real-time visualization of Taiwan's export trade, semiconductor industry &amp; cross-strait economics</p>
+<div class="badge">Source: Customs Administration &middot; Ministry of Finance Statistics</div>
+</div>
+
+<div class="tab-bar">
+<button class="tab-btn active" data-tab="trend"><span class="icon">📊</span> Export Trends</button>
+<button class="tab-btn" data-tab="semiconductor"><span class="icon">🔬</span> Semiconductors</button>
+<button class="tab-btn" data-tab="cross-strait"><span class="icon">🔗</span> Cross-Strait</button>
+<button class="tab-btn" data-tab="overview"><span class="icon">🌐</span> Trade Overview</button>
+</div>
+
+<div class="container">
+
+<nav class="breadcrumb" aria-label="breadcrumb">
+<a href="https://upliftorch.com/">Home</a>
+<span class="sep">›</span>
+<a href="https://upliftorch.com/tools-en">Free Online Tools</a>
+<span class="sep">›</span>
+<span aria-current="page">Trade Data Analysis</span>
+</nav>
+
+<div class="loading" id="loading">
+<div class="spinner"></div>
+<p style="margin-top:1rem">Loading trade data from GCS&hellip;</p>
+</div>
+
+<!-- ===== Tab 1: Export Trends ===== -->
+<div class="tab-content active" id="tab-trend">
+<div class="kpi-row" id="trend-kpi"></div>
+
+<div class="section-divider"><div class="section-icon blue">📈</div><div class="section-text"><h3>Country-Level Export Analysis</h3><p>Filter monthly export trends by country and ranking</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>Export Trends by Country</h2><div class="card-desc">Monthly export value &mdash; select countries and year range</div></div>
+<div class="tag">Monthly</div>
+</div>
+<div class="pill-group" id="trend-countries"></div>
+<div class="ctrl-bar">
+<label>From:<input type="number" id="trend-start" value="2018" min="2001" max="2026"></label>
+<label>To:<input type="number" id="trend-end" value="2026" min="2001" max="2026"></label>
+<button class="btn" onclick="renderTrend()">Update</button>
+</div>
+<div class="chart-box"><canvas id="chart-trend"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>Top Export Destinations</h2><div class="card-desc">Last 12 months total export ranking</div></div>
+<div class="tag">TOP 10</div>
+</div>
+<div class="chart-box" style="min-height:280px"><canvas id="chart-share"></canvas></div>
+</div>
+<div class="section-divider"><div class="section-icon orange">🌍</div><div class="section-text"><h3>Regional Structure & Concentration</h3><p>Continental share, concentration index, seasonality & growth rates</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>Regional Export Share</h2><div class="card-desc">Stacked area by region over time</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-region-share"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>Export Concentration (HHI)</h2><div class="card-desc">Herfindahl-Hirschman Index &mdash; lower means more diversified</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box" style="min-height:280px"><canvas id="chart-hhi"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>Monthly Seasonality Heatmap</h2><div class="card-desc">Total export intensity by month &amp; year</div></div>
+<div class="tag">Heatmap</div>
+</div>
+<div class="heatmap-wrap" id="heatmap-box"></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>YoY Growth by Country</h2><div class="card-desc">Year-over-year growth rate for top 5 destinations</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-yoy-country"></canvas></div>
+</div>
+</div>
+
+<!-- ===== Tab 2: Semiconductors ===== -->
+<div class="tab-content" id="tab-semiconductor">
+<div class="kpi-row" id="ic-kpi"></div>
+
+<div class="section-divider"><div class="section-icon blue">📤</div><div class="section-text"><h3>IC Export Analysis</h3><p>Export totals, destinations & product structure</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>IC Export Value &amp; Growth</h2><div class="card-desc">Annual IC export value (100M USD) with YoY growth</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-total"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC Export Destinations</h2><div class="card-desc">Regional breakdown of IC exports (stacked)</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-region"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC Product Categories</h2><div class="card-desc">Processors, Memory, Monolithic Digital IC, Hybrid IC, etc.</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-product"></canvas></div>
+</div>
+<div class="section-divider"><div class="section-icon green">📥</div><div class="section-text"><h3>IC Imports & Industry Position</h3><p>Import-export balance, import sources & IC share of total exports</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>IC Import vs Export</h2><div class="card-desc">Side-by-side comparison of IC imports and exports</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-impexp"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC Import Sources</h2><div class="card-desc">Where Taiwan imports its IC from (stacked)</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-import-src"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC Share of Total Exports</h2><div class="card-desc">IC exports as percentage of total national exports</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box" style="min-height:280px"><canvas id="chart-ic-share-total"></canvas></div>
+</div>
+</div>
+
+<!-- ===== Tab 3: Cross-Strait ===== -->
+<div class="tab-content" id="tab-cross-strait">
+<div class="kpi-row" id="cs-kpi"></div>
+
+<div class="section-divider"><div class="section-icon orange">⚠️</div><div class="section-text"><h3>Dependency & Semiconductor Risk</h3><p>Export dependency, IC concentration & historical data</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>Trade Dependency Trend</h2><div class="card-desc">Taiwan's export/import dependency on China (incl. Hong Kong)</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-ratio"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC: China vs Rest of World</h2><div class="card-desc">Semiconductor industry's China dependency</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-ic"></canvas></div>
+</div>
+<div class="section-divider"><div class="section-icon green">🔄</div><div class="section-text"><h3>Surplus Volatility & Market Shift</h3><p>Surplus sources, monthly volatility & alternative market growth</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>Trade Surplus Trend</h2><div class="card-desc">China surplus vs total surplus per year</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-surplus"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>Monthly China Export Volatility</h2><div class="card-desc">Monthly export to China + Hong Kong</div></div>
+<div class="tag">Monthly</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-monthly"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>Alternative Market Growth</h2><div class="card-desc">YoY growth for ASEAN, India, USA, Vietnam as China alternatives</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-alt"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>Annual Cross-Strait Trade Data</h2><div class="card-desc">Exports, imports, surplus &amp; dependency rates</div></div>
+</div>
+<div class="tbl-wrap" id="cs-table"></div>
+</div>
+</div>
+
+<!-- ===== Tab 4: Trade Overview ===== -->
+<div class="tab-content" id="tab-overview">
+
+<div class="section-divider"><div class="section-icon blue">📊</div><div class="section-text"><h3>Overall Trade Summary</h3><p>Total trade volume, balance & leading market trends</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>Total Import/Export &amp; Balance</h2><div class="card-desc">Annual exports, imports, and trade surplus</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-ov-total"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>Top 5 Export Markets Over Time</h2><div class="card-desc">Stacked area showing leading destinations</div></div>
+<div class="tag">Yearly</div>
+</div>
+<div class="chart-box"><canvas id="chart-ov-top5"></canvas></div>
+</div>
+<div class="section-divider"><div class="section-icon purple">🚀</div><div class="section-text"><h3>Emerging Market Opportunities</h3><p>10-year growth multipliers to identify rising markets</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>Emerging Market Growth</h2><div class="card-desc">Growth multiplier: latest year / 10 years ago</div></div>
+<div class="tag">10-Year</div>
+</div>
+<div class="chart-box" style="min-height:280px"><canvas id="chart-ov-emerging"></canvas></div>
+</div>
+</div>
+
+</div>
+
+<footer>
+<p>Source: <a href="https://web.customs.gov.tw" target="_blank" rel="noopener">Customs Administration</a> &middot;
+<a href="https://service.mof.gov.tw" target="_blank" rel="noopener">Ministry of Finance Statistics</a> |
+<a href="../">Chinese Version</a></p>
+<p style="margin-top:.3rem">&copy; <script>document.write(new Date().getFullYear())</script> Taiwan Trade Data Analysis</p>
+</footer>
+
+<script>
+/* ========== Tab Switching ========== */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ========== Data Sources ========== */
+const GCS_BASE = 'https://storage.googleapis.com/upliftorch_tool/trade-analysis/data';
+const CSV_EXPORT = GCS_BASE + '/u2010ex.csv';
+const CSV_IMPORT = GCS_BASE + '/u2010im.csv';
+const CSV_IC = GCS_BASE + '/ic_trade.csv';
+
+let exportData = null, importData = null, icData = null;
+const charts = {};
+
+/* ========== CSV Parser ========== */
+function parseCSV(text, delim) {
+  if (delim === undefined) delim = ',';
+  const lines = text.replace(/\r/g, '').trim().split('\n');
+  return lines.map(line => {
+    const row = [];
+    let inQ = false, cell = '';
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === delim && !inQ) { row.push(cell.trim()); cell = ''; continue; }
+      cell += c;
+    }
+    row.push(cell.trim());
+    return row;
+  });
+}
+
+async function fetchCSV(url) {
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('HTTP ' + resp.status + ': ' + url);
+  const buf = await resp.arrayBuffer();
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+  } catch {
+    return new TextDecoder('big5').decode(buf);
+  }
+}
+
+/* ========== Parse Trade by Country ========== */
+function parseTradeByCountry(text) {
+  const rows = parseCSV(text);
+  if (rows.length < 2) return null;
+  const countries = rows[0].slice(1).map(h => h.replace(/\(千\)/g, '').replace(/\(千美元\)/g, '').replace(/\(USD Thousand\)/g, '').trim());
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row[0]) continue;
+    const m = row[0].match(/(\d{4})[年~～](\d{1,2})/);
+    if (!m) continue;
+    const year = parseInt(m[1]), month = parseInt(m[2]);
+    const values = {};
+    for (let j = 1; j < row.length && j - 1 < countries.length; j++) {
+      const v = parseFloat(row[j].replace(/,/g, ''));
+      if (!isNaN(v)) values[countries[j - 1]] = v;
+    }
+    data.push({ year: year, month: month, date: year + '-' + String(month).padStart(2, '0'), values: values });
+  }
+  return { countries: countries, data: data };
+}
+
+/* ========== Parse IC Data (TSV) ========== */
+function parseICData(text) {
+  const clean = text.replace(/^\uFEFF/, '');
+  const rows = parseCSV(clean, '\t');
+  if (rows.length < 2) return null;
+  const header = rows[0];
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    if (!row[0] || !row[0].trim()) continue;
+    const rocYear = parseInt(row[0]);
+    if (isNaN(rocYear) || rocYear < 80) continue;
+    const obj = { year: rocYear + 1911, rocYear: rocYear };
+    for (let j = 1; j < header.length && j < row.length; j++) {
+      const val = parseFloat(row[j]);
+      if (!isNaN(val)) obj[header[j].trim()] = val;
+    }
+    data.push(obj);
+  }
+  return data;
+}
+
+/* ========== Country Helpers ========== */
+const KEY_COUNTRIES = {
+  'China': ['中國大陸'], 'Hong Kong': ['香港'], 'USA': ['美國'], 'Japan': ['日本'],
+  'South Korea': ['韓國','南韓'], 'Singapore': ['新加坡'], 'Germany': ['德國'],
+  'Vietnam': ['越南'], 'Malaysia': ['馬來西亞'], 'Netherlands': ['荷蘭'],
+};
+function findCol(countries, aliases) {
+  for (const a of aliases) {
+    const i = countries.findIndex(c => c.includes(a));
+    if (i >= 0) return countries[i];
+  }
+  return null;
+}
+const COLORS = ['#2563eb','#f97316','#10b981','#ef4444','#8b5cf6','#eab308','#06b6d4','#ec4899','#6366f1','#14b8a6'];
+const COLORS_SOFT = COLORS.map(c => c + '18');
+
+/* ========== High DPI & Global Chart Defaults ========== */
+/* Let Chart.js use browser's native devicePixelRatio automatically */
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif";
+
+/* Force all axis labels horizontal globally */
+Chart.defaults.scales.linear.ticks.maxRotation = 0;
+Chart.defaults.scales.linear.ticks.minRotation = 0;
+Chart.defaults.scales.linear.ticks.autoSkip = true;
+Chart.defaults.scales.linear.ticks.autoSkipPadding = 12;
+Chart.defaults.scales.category.ticks.maxRotation = 0;
+Chart.defaults.scales.category.ticks.minRotation = 0;
+Chart.defaults.scales.category.ticks.autoSkip = true;
+Chart.defaults.scales.category.ticks.autoSkipPadding = 12;
+
+/* withAxisDefaults kept for extra merge */
+const AXIS_DEFAULTS = {
+  ticks: { maxRotation: 0, minRotation: 0, autoSkip: true, autoSkipPadding: 12 }
+};
+function withAxisDefaults(scales) {
+  const out = {};
+  for (const [key, val] of Object.entries(scales)) {
+    out[key] = { ...val, ticks: { ...AXIS_DEFAULTS.ticks, ...(val.ticks || {}) } };
+  }
+  return out;
+}
+
+/* ========== Format Helpers ========== */
+const fmtB = v => 'US$' + (v / 1000000).toFixed(1) + 'B';
+const fmtPct = v => (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
+
+/* ========== Chart Destroy Helper ========== */
+function getChart(id) { if (charts[id]) charts[id].destroy(); }
+
+/* ========== Region Helpers ========== */
+const REGION_MAP = {
+  'Asia': '亞洲',
+  'Middle East': '中東',
+  'Europe': '歐洲',
+  'North America': '北美洲',
+  'Central America': '中美洲',
+  'South America': '南美洲',
+  'Oceania': '大洋洲',
+  'Africa': '非洲',
+};
+
+function findRegionCol(countries, zhName) {
+  return countries.find(c => c.includes(zhName)) || null;
+}
+
+/* ========== Alt market helpers ========== */
+const ALT_MARKETS = {
+  'ASEAN (Singapore)': ['新加坡'],
+  'India': ['印度'],
+  'USA': ['美國'],
+  'Vietnam': ['越南'],
+};
+
+const EMERGING_MARKETS = {
+  'Vietnam': ['越南'],
+  'India': ['印度'],
+  'Philippines': ['菲律賓'],
+  'Thailand': ['泰國'],
+  'Malaysia': ['馬來西亞'],
+  'Indonesia': ['印尼','印度尼西亞'],
+  'Mexico': ['墨西哥'],
+  'Poland': ['波蘭'],
+};
+
+/* ==========================================================
+   RENDER: Tab 1 — Export Trends (7 charts)
+   ========================================================== */
+
+/* Chart 2: Export Trends by Country (line + pill selector + year range) */
+function renderTrend() {
+  if (!exportData) return;
+  const sy = parseInt(document.getElementById('trend-start').value) || 2018;
+  const ey = parseInt(document.getElementById('trend-end').value) || 2026;
+  const sel = Array.from(document.querySelectorAll('#trend-countries .pill.active')).map(p => p.dataset.country);
+  const filt = exportData.data.filter(d => d.year >= sy && d.year <= ey);
+
+  const datasets = sel.map((name, i) => {
+    const col = findCol(exportData.countries, KEY_COUNTRIES[name] || [name]);
+    return {
+      label: name, data: filt.map(d => col ? (d.values[col] || 0) : 0),
+      borderColor: COLORS[i % COLORS.length], backgroundColor: COLORS_SOFT[i % COLORS.length],
+      fill: false, tension: 0.35, pointRadius: 0, borderWidth: 2.5,
+    };
+  });
+
+  getChart('trend');
+  charts.trend = new Chart(document.getElementById('chart-trend'), {
+    type: 'line',
+    data: { labels: filt.map(d => d.date), datasets: datasets },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' }},
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtB(ctx.parsed.y) }}},
+      scales: withAxisDefaults({
+        y: { ticks: { callback: v => (v / 1000000).toFixed(0) + 'B' }},
+        x: { ticks: { maxTicksLimit: 24 }}
+      })
+    }
+  });
+
+  /* Chart 1: KPI row */
+  const last12 = exportData.data.slice(-12);
+  let t12 = 0; last12.forEach(d => { for (const v of Object.values(d.values)) t12 += v; });
+  const prev12 = exportData.data.slice(-24, -12);
+  let p12 = 0; prev12.forEach(d => { for (const v of Object.values(d.values)) p12 += v; });
+  const growth = p12 > 0 ? ((t12 - p12) / p12 * 100) : 0;
+
+  document.getElementById('trend-kpi').innerHTML =
+    '<div class="kpi"><div class="num">' + fmtB(t12) + '</div><div class="lbl">Last 12-Month Exports</div></div>' +
+    '<div class="kpi ' + (growth >= 0 ? 'success' : 'danger') + '"><div class="num">' + fmtPct(growth) + '</div><div class="lbl">YoY Growth</div></div>' +
+    '<div class="kpi"><div class="num">' + exportData.data.length.toLocaleString() + '</div><div class="lbl">Data Points</div></div>' +
+    '<div class="kpi"><div class="num">' + exportData.countries.length + '</div><div class="lbl">Countries / Regions</div></div>';
+}
+
+/* Chart 3: Top Export Destinations (horizontal bar) */
+function renderShare() {
+  if (!exportData) return;
+  const last12 = exportData.data.slice(-12);
+  const totals = {};
+  for (const name of Object.keys(KEY_COUNTRIES)) {
+    const col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+    if (!col) continue;
+    totals[name] = 0;
+    last12.forEach(d => { totals[name] += (d.values[col] || 0); });
+  }
+  const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+  getChart('share');
+  charts.share = new Chart(document.getElementById('chart-share'), {
+    type: 'bar',
+    data: { labels: sorted.map(s => s[0]), datasets: [{
+      data: sorted.map(s => s[1]),
+      backgroundColor: COLORS.slice(0, sorted.length),
+      borderRadius: 6, barPercentage: 0.65,
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmtB(ctx.parsed.x) }}},
+      scales: withAxisDefaults({ x: { ticks: { callback: v => (v / 1000000).toFixed(0) + 'B' }}})
+    }
+  });
+}
+
+/* Chart 4: Regional Export Share (stacked area) */
+function renderRegionShare() {
+  if (!exportData) return;
+  const yearlyRegion = {};
+  for (const d of exportData.data) {
+    if (!yearlyRegion[d.year]) {
+      yearlyRegion[d.year] = {};
+      for (const rn of Object.keys(REGION_MAP)) yearlyRegion[d.year][rn] = 0;
+    }
+    for (const [enName, zhName] of Object.entries(REGION_MAP)) {
+      const col = findRegionCol(exportData.countries, zhName);
+      if (col) yearlyRegion[d.year][enName] += (d.values[col] || 0);
+    }
+  }
+  const years = Object.keys(yearlyRegion).map(Number).sort((a, b) => a - b);
+  const regionNames = Object.keys(REGION_MAP);
+  const regionColors = ['#2563eb','#eab308','#8b5cf6','#ef4444','#06b6d4','#10b981','#14b8a6','#ec4899'];
+
+  getChart('regionShare');
+  charts.regionShare = new Chart(document.getElementById('chart-region-share'), {
+    type: 'line',
+    data: { labels: years, datasets: regionNames.map((rn, i) => ({
+      label: rn, data: years.map(y => yearlyRegion[y][rn] || 0),
+      borderColor: regionColors[i % regionColors.length],
+      backgroundColor: regionColors[i % regionColors.length] + '40',
+      fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2,
+    }))},
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + fmtB(ctx.parsed.y) }}},
+      scales: withAxisDefaults({
+        x: { stacked: true },
+        y: { stacked: true, ticks: { callback: v => (v / 1000000).toFixed(0) + 'B' }}
+      })
+    }
+  });
+}
+
+/* Chart 5: Export Concentration HHI */
+function renderHHI() {
+  if (!exportData) return;
+  const yearlyTotals = {};
+  const yearlyByCountry = {};
+  for (const d of exportData.data) {
+    if (!yearlyTotals[d.year]) { yearlyTotals[d.year] = 0; yearlyByCountry[d.year] = {}; }
+    for (const [col, val] of Object.entries(d.values)) {
+      yearlyTotals[d.year] += val;
+      if (!yearlyByCountry[d.year][col]) yearlyByCountry[d.year][col] = 0;
+      yearlyByCountry[d.year][col] += val;
+    }
+  }
+  const years = Object.keys(yearlyTotals).map(Number).sort((a, b) => a - b);
+  const hhiValues = years.map(y => {
+    const total = yearlyTotals[y];
+    if (total <= 0) return 0;
+    let hhi = 0;
+    for (const val of Object.values(yearlyByCountry[y])) {
+      const share = val / total * 100;
+      hhi += share * share;
+    }
+    return hhi;
+  });
+
+  getChart('hhi');
+  charts.hhi = new Chart(document.getElementById('chart-hhi'), {
+    type: 'line',
+    data: { labels: years, datasets: [{
+      label: 'HHI', data: hhiValues,
+      borderColor: '#8b5cf6', backgroundColor: '#8b5cf620',
+      fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2.5,
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => 'HHI: ' + ctx.parsed.y.toFixed(0) }}},
+      scales: withAxisDefaults({ y: { min: 0 }})
+    }
+  });
+}
+
+/* Chart 6: Monthly Seasonality Heatmap (pure CSS grid, NOT Chart.js) */
+function renderHeatmap() {
+  if (!exportData) return;
+  const monthlyTotals = {};
+  for (const d of exportData.data) {
+    const key = d.year + '-' + d.month;
+    if (!monthlyTotals[key]) monthlyTotals[key] = 0;
+    for (const v of Object.values(d.values)) monthlyTotals[key] += v;
+  }
+  const years = [...new Set(exportData.data.map(d => d.year))].sort((a, b) => a - b);
+  const allVals = Object.values(monthlyTotals).filter(v => v > 0);
+  const minV = Math.min(...allVals);
+  const maxV = Math.max(...allVals);
+  const range = maxV - minV || 1;
+
+  let html = '<div class="heatmap">';
+  html += '<div class="hm-label"></div>';
+  for (let m = 1; m <= 12; m++) html += '<div class="hm-header">' + m + '</div>';
+
+  for (const y of years) {
+    html += '<div class="hm-label">' + y + '</div>';
+    for (let m = 1; m <= 12; m++) {
+      const key = y + '-' + m;
+      const val = monthlyTotals[key];
+      if (val === undefined) {
+        html += '<div class="hm-cell" style="background:var(--bg2)">-</div>';
+      } else {
+        const intensity = (val - minV) / range;
+        const r = Math.round(37 + (239 - 37) * (1 - intensity));
+        const g = Math.round(99 + (68 - 99) * (1 - intensity));
+        const b = Math.round(235 + (68 - 235) * (1 - intensity));
+        const textColor = intensity > 0.6 ? '#fff' : 'var(--text)';
+        html += '<div class="hm-cell" style="background:rgb(' + r + ',' + g + ',' + b + ');color:' + textColor + '" title="' + y + '/' + m + ': ' + fmtB(val) + '">' + (val / 1000000).toFixed(0) + 'B</div>';
+      }
+    }
+  }
+  html += '</div>';
+  document.getElementById('heatmap-box').innerHTML = html;
+}
+
+/* Chart 7: YoY Growth by Country */
+function renderYoYCountry() {
+  if (!exportData) return;
+  const yearlyByCountry = {};
+  const top5Names = Object.keys(KEY_COUNTRIES).slice(0, 5);
+  for (const name of top5Names) {
+    yearlyByCountry[name] = {};
+    const col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+    if (!col) continue;
+    for (const d of exportData.data) {
+      if (!yearlyByCountry[name][d.year]) yearlyByCountry[name][d.year] = 0;
+      yearlyByCountry[name][d.year] += (d.values[col] || 0);
+    }
+  }
+  const years = [...new Set(exportData.data.map(d => d.year))].sort((a, b) => a - b);
+  const growthYears = years.slice(1);
+
+  getChart('yoyCountry');
+  charts.yoyCountry = new Chart(document.getElementById('chart-yoy-country'), {
+    type: 'line',
+    data: { labels: growthYears, datasets: top5Names.map((name, i) => {
+      const gData = growthYears.map(y => {
+        const cur = yearlyByCountry[name][y] || 0;
+        const prev = yearlyByCountry[name][y - 1] || 0;
+        if (prev <= 0) return null;
+        return (cur - prev) / prev * 100;
+      });
+      return {
+        label: name, data: gData,
+        borderColor: COLORS[i], backgroundColor: COLORS_SOFT[i],
+        fill: false, tension: 0.35, pointRadius: 2, borderWidth: 2, spanGaps: true,
+      };
+    })},
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) + '%' : 'N/A') }}},
+      scales: withAxisDefaults({
+        y: { },
+        x: {}
+      })
+    }
+  });
+}
+
+/* ==========================================================
+   RENDER: Tab 2 — Semiconductors (7 charts)
+   ========================================================== */
+function renderSemiconductor() {
+  if (!icData || icData.length === 0) return;
+  const years = icData.map(d => d.year);
+  const exV = icData.map(d => d['出口IC'] || 0);
+  const exG = icData.map(d => d['出口年增率'] || 0);
+  const latest = icData[icData.length - 1];
+  const exIC = latest['出口IC'] || 0;
+  const imIC = latest['進口IC'] || 0;
+  const gRate = latest['出口年增率'] || 0;
+
+  /* Chart 8: KPI row */
+  document.getElementById('ic-kpi').innerHTML =
+    '<div class="kpi"><div class="num">US$' + exIC.toFixed(0) + 'B</div><div class="lbl">' + latest.year + ' IC Exports</div></div>' +
+    '<div class="kpi ' + (gRate >= 0 ? 'success' : 'danger') + '"><div class="num">' + fmtPct(gRate) + '</div><div class="lbl">Growth Rate</div></div>' +
+    '<div class="kpi"><div class="num">US$' + imIC.toFixed(0) + 'B</div><div class="lbl">' + latest.year + ' IC Imports</div></div>' +
+    '<div class="kpi success"><div class="num">US$' + (exIC - imIC).toFixed(0) + 'B</div><div class="lbl">IC Trade Surplus</div></div>';
+
+  /* Chart 9: IC Export Value & Growth (bar + line combo) */
+  getChart('icTotal');
+  charts.icTotal = new Chart(document.getElementById('chart-ic-total'), {
+    type: 'bar',
+    data: { labels: years, datasets: [
+      { label: 'IC Exports (100M USD)', data: exV, backgroundColor: '#2563eb', borderRadius: 4, yAxisID: 'y' },
+      { label: 'YoY Growth %', data: exG, type: 'line', borderColor: '#f97316', backgroundColor: '#f9731620', yAxisID: 'y1', tension: 0.35, pointRadius: 3, borderWidth: 2.5 }
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index' },
+      plugins: { legend: { labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({
+        y: { position: 'left'},
+        y1: { position: 'right', grid: { drawOnChartArea: false }}
+      })
+    }
+  });
+
+  /* Chart 10: IC Export Destinations (stacked bar) */
+  const exRegions = ['EX陸港','EX美國','EX日本','EX南韓','EX歐洲','EX東協','EX其他地區'];
+  const exRLabels = ['China/HK','USA','Japan','S.Korea','Europe','ASEAN','Other'];
+  getChart('icRegion');
+  charts.icRegion = new Chart(document.getElementById('chart-ic-region'), {
+    type: 'bar',
+    data: { labels: years, datasets: exRegions.map((k, i) => ({
+      label: exRLabels[i], data: icData.map(d => d[k] || 0), backgroundColor: COLORS[i],
+    }))},
+    options: {
+      responsive: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({ x: { stacked: true }, y: { stacked: true}})
+    }
+  });
+
+  /* Chart 11: IC Product Categories (stacked bar) */
+  const products = ['EX處理器','EX記憶體','EX單石數位IC','EX單石數位IC晶粒及晶圓','EX混合IC','EX混合IC晶粒及晶圓','EX其他'];
+  const pLabels = ['Processors','Memory','Mono. Digital IC','Mono. IC Dies/Wafers','Hybrid IC','Hybrid IC Dies/Wafers','Other'];
+  getChart('icProduct');
+  charts.icProduct = new Chart(document.getElementById('chart-ic-product'), {
+    type: 'bar',
+    data: { labels: years, datasets: products.map((k, i) => ({
+      label: pLabels[i], data: icData.map(d => d[k] || 0), backgroundColor: COLORS[i % COLORS.length],
+    }))},
+    options: {
+      responsive: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({ x: { stacked: true }, y: { stacked: true}})
+    }
+  });
+
+  /* Chart 12: IC Import vs Export (grouped bar side by side) */
+  const imV = icData.map(d => d['進口IC'] || 0);
+  getChart('icImpExp');
+  charts.icImpExp = new Chart(document.getElementById('chart-ic-impexp'), {
+    type: 'bar',
+    data: { labels: years, datasets: [
+      { label: 'IC Exports', data: exV, backgroundColor: '#2563eb', borderRadius: 4 },
+      { label: 'IC Imports', data: imV, backgroundColor: '#f97316', borderRadius: 4 },
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index' },
+      plugins: { legend: { labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({ y: { }})
+    }
+  });
+
+  /* Chart 13: IC Import Sources (stacked bar) */
+  const imRegions = ['IM陸港','IM美國','IM日本','IM南韓','IM歐洲','IM東協','IM其他地區'];
+  const imRLabels = ['China/HK','USA','Japan','S.Korea','Europe','ASEAN','Other'];
+  getChart('icImportSrc');
+  charts.icImportSrc = new Chart(document.getElementById('chart-ic-import-src'), {
+    type: 'bar',
+    data: { labels: years, datasets: imRegions.map((k, i) => ({
+      label: imRLabels[i], data: icData.map(d => d[k] || 0), backgroundColor: COLORS[i],
+    }))},
+    options: {
+      responsive: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({ x: { stacked: true }, y: { stacked: true}})
+    }
+  });
+
+  /* Chart 14: IC Share of Total Exports */
+  renderICShareOfTotal(years);
+}
+
+/* Chart 14: IC as % of total exports */
+function renderICShareOfTotal(icYears) {
+  if (!exportData || !icData) return;
+  const yearlyTotal = {};
+  for (const d of exportData.data) {
+    if (!yearlyTotal[d.year]) yearlyTotal[d.year] = 0;
+    for (const v of Object.values(d.values)) yearlyTotal[d.year] += v;
+  }
+  /* IC data is in 億美元 (100M USD), total export is in 千美元 (thousands USD)
+     icValue * 100000 (convert 100M to thousands) / yearlyTotalThousands * 100 */
+  const shareData = icYears.map(y => {
+    const icRow = icData.find(d => d.year === y);
+    const icVal = icRow ? (icRow['出口IC'] || 0) : 0;
+    const totalThousands = yearlyTotal[y] || 0;
+    if (totalThousands <= 0) return 0;
+    return icVal * 100000 / totalThousands * 100;
+  });
+
+  getChart('icShareTotal');
+  charts.icShareTotal = new Chart(document.getElementById('chart-ic-share-total'), {
+    type: 'line',
+    data: { labels: icYears, datasets: [{
+      label: 'IC % of Total Exports', data: shareData,
+      borderColor: '#2563eb', backgroundColor: '#2563eb20',
+      fill: true, tension: 0.35, pointRadius: 3, borderWidth: 2.5,
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => 'IC Share: ' + ctx.parsed.y.toFixed(1) + '%' }}},
+      scales: withAxisDefaults({ y: { min: 0 }})
+    }
+  });
+}
+
+/* ==========================================================
+   RENDER: Tab 3 — Cross-Strait (7 charts)
+   ========================================================== */
+function renderCrossStrait() {
+  if (!exportData || !importData) return;
+
+  const yearly = {};
+  const ensure = y => { if (!yearly[y]) yearly[y] = { chinaEx: 0, totalEx: 0, chinaIm: 0, totalIm: 0 }; };
+
+  for (const d of exportData.data) {
+    ensure(d.year);
+    const cc = findCol(exportData.countries, ['中國大陸']);
+    const hc = findCol(exportData.countries, ['香港']);
+    if (cc) yearly[d.year].chinaEx += (d.values[cc] || 0);
+    if (hc) yearly[d.year].chinaEx += (d.values[hc] || 0);
+    for (const v of Object.values(d.values)) yearly[d.year].totalEx += v;
+  }
+  for (const d of importData.data) {
+    ensure(d.year);
+    const cc = findCol(importData.countries, ['中國大陸']);
+    const hc = findCol(importData.countries, ['香港']);
+    if (cc) yearly[d.year].chinaIm += (d.values[cc] || 0);
+    if (hc) yearly[d.year].chinaIm += (d.values[hc] || 0);
+    for (const v of Object.values(d.values)) yearly[d.year].totalIm += v;
+  }
+
+  const years = Object.keys(yearly).map(Number).sort((a, b) => a - b);
+  if (years.length === 0) return;
+
+  const exRatios = years.map(y => yearly[y].totalEx > 0 ? (yearly[y].chinaEx / yearly[y].totalEx * 100) : 0);
+  const imRatios = years.map(y => yearly[y].totalIm > 0 ? (yearly[y].chinaIm / yearly[y].totalIm * 100) : 0);
+
+  const ly = yearly[years[years.length - 1]];
+  const latestExR = ly.totalEx > 0 ? (ly.chinaEx / ly.totalEx * 100) : 0;
+  const surplus = (ly.chinaEx - ly.chinaIm) / 1000000;
+
+  /* Chart 15: KPI row */
+  document.getElementById('cs-kpi').innerHTML =
+    '<div class="kpi warn"><div class="num">' + latestExR.toFixed(1) + '%</div><div class="lbl">' + years[years.length - 1] + ' Export Dependency</div></div>' +
+    '<div class="kpi"><div class="num">' + fmtB(ly.chinaEx) + '</div><div class="lbl">Exports to China</div></div>' +
+    '<div class="kpi"><div class="num">' + fmtB(ly.chinaIm) + '</div><div class="lbl">Imports from China</div></div>' +
+    '<div class="kpi ' + (surplus >= 0 ? 'success' : 'danger') + '"><div class="num">' + (surplus >= 0 ? '+' : '') + 'US$' + surplus.toFixed(0) + 'B</div><div class="lbl">Trade Surplus w/ China</div></div>';
+
+  /* Chart 16: Trade Dependency Trend (line with fill) */
+  getChart('csRatio');
+  charts.csRatio = new Chart(document.getElementById('chart-cs-ratio'), {
+    type: 'line',
+    data: { labels: years, datasets: [
+      { label: 'Export Dependency %', data: exRatios, borderColor: '#ef4444', backgroundColor: '#ef444418', fill: true, tension: 0.35, borderWidth: 2.5 },
+      { label: 'Import Dependency %', data: imRatios, borderColor: '#2563eb', backgroundColor: '#2563eb18', fill: true, tension: 0.35, borderWidth: 2.5 }
+    ]},
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { usePointStyle: true }}, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%' }}},
+      scales: withAxisDefaults({ y: { min: 0 }})
+    }
+  });
+
+  /* Chart 17: IC — China vs Rest of World (stacked bar + line) */
+  if (icData && icData.length > 0) {
+    const icYears = icData.map(d => d.year);
+    const icChina = icData.map(d => d['EX陸港'] || 0);
+    const icOther = icData.map(d => (d['出口IC'] || 0) - (d['EX陸港'] || 0));
+    const icCR = icData.map(d => d['出口IC'] > 0 ? ((d['EX陸港'] || 0) / d['出口IC'] * 100) : 0);
+
+    getChart('csIc');
+    charts.csIc = new Chart(document.getElementById('chart-cs-ic'), {
+      type: 'bar',
+      data: { labels: icYears, datasets: [
+        { label: 'China/HK', data: icChina, backgroundColor: '#ef4444', stack: 'a' },
+        { label: 'Rest of World', data: icOther, backgroundColor: '#2563eb', stack: 'a' },
+        { label: 'China Share %', data: icCR, type: 'line', borderColor: '#eab308', borderWidth: 2.5, yAxisID: 'y1', tension: 0.35, pointRadius: 3 }
+      ]},
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { usePointStyle: true }}},
+        scales: withAxisDefaults({
+          y: { stacked: true},
+          y1: { position: 'right', grid: { drawOnChartArea: false }, min: 0 }
+        })
+      }
+    });
+  }
+
+  /* Chart 18: Trade Surplus Trend (area: China surplus vs total surplus) */
+  const chinaSurplus = years.map(y => (yearly[y].chinaEx - yearly[y].chinaIm) / 1000000);
+  const totalSurplus = years.map(y => (yearly[y].totalEx - yearly[y].totalIm) / 1000000);
+  getChart('csSurplus');
+  charts.csSurplus = new Chart(document.getElementById('chart-cs-surplus'), {
+    type: 'line',
+    data: { labels: years, datasets: [
+      { label: 'Total Trade Surplus', data: totalSurplus, borderColor: '#2563eb', backgroundColor: '#2563eb20', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 2 },
+      { label: 'China Surplus', data: chinaSurplus, borderColor: '#ef4444', backgroundColor: '#ef444420', fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 2 },
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { usePointStyle: true }}, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': US$' + ctx.parsed.y.toFixed(1) + 'B' }}},
+      scales: withAxisDefaults({ y: { }})
+    }
+  });
+
+  /* Chart 19: Monthly China Export Volatility */
+  const chinaMonthly = exportData.data.map(d => {
+    const cc = findCol(exportData.countries, ['中國大陸']);
+    const hc = findCol(exportData.countries, ['香港']);
+    let val = 0;
+    if (cc) val += (d.values[cc] || 0);
+    if (hc) val += (d.values[hc] || 0);
+    return val;
+  });
+  getChart('csMonthly');
+  charts.csMonthly = new Chart(document.getElementById('chart-cs-monthly'), {
+    type: 'line',
+    data: { labels: exportData.data.map(d => d.date), datasets: [{
+      label: 'Monthly Exports to China+HK',
+      data: chinaMonthly,
+      borderColor: '#ef4444', backgroundColor: '#ef444415',
+      fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2,
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fmtB(ctx.parsed.y) }}},
+      scales: withAxisDefaults({
+        y: { ticks: { callback: v => (v / 1000000).toFixed(0) + 'B' }},
+        x: { ticks: { maxTicksLimit: 24 }}
+      })
+    }
+  });
+
+  /* Chart 20: Alternative Market Growth (multi-line YoY) */
+  const altYearly = {};
+  for (const [enName, aliases] of Object.entries(ALT_MARKETS)) {
+    altYearly[enName] = {};
+    const col = findCol(exportData.countries, aliases);
+    if (!col) continue;
+    for (const d of exportData.data) {
+      if (!altYearly[enName][d.year]) altYearly[enName][d.year] = 0;
+      altYearly[enName][d.year] += (d.values[col] || 0);
+    }
+  }
+  const altNames = Object.keys(ALT_MARKETS);
+  const altGrowthYears = years.slice(1);
+  getChart('csAlt');
+  charts.csAlt = new Chart(document.getElementById('chart-cs-alt'), {
+    type: 'line',
+    data: { labels: altGrowthYears, datasets: altNames.map((name, i) => ({
+      label: name,
+      data: altGrowthYears.map(y => {
+        const cur = altYearly[name][y] || 0;
+        const prev = altYearly[name][y - 1] || 0;
+        if (prev <= 0) return null;
+        return (cur - prev) / prev * 100;
+      }),
+      borderColor: COLORS[i], backgroundColor: COLORS_SOFT[i],
+      fill: false, tension: 0.35, pointRadius: 2, borderWidth: 2.5, spanGaps: true,
+    }))},
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { usePointStyle: true }}, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) + '%' : 'N/A') }}},
+      scales: withAxisDefaults({ y: { }, x: {} })
+    }
+  });
+
+  /* Chart 21: Annual trade data table */
+  let html = '<table><thead><tr><th>Year</th><th>Exports to China</th><th>Total Exports</th><th>Export Dep.</th><th>Imports from China</th><th>Total Imports</th><th>Import Dep.</th><th>China Surplus</th></tr></thead><tbody>';
+  for (const y of years.slice().reverse()) {
+    const d = yearly[y];
+    const exR = d.totalEx > 0 ? (d.chinaEx / d.totalEx * 100) : 0;
+    const imR = d.totalIm > 0 ? (d.chinaIm / d.totalIm * 100) : 0;
+    const sp = (d.chinaEx - d.chinaIm) / 1000000;
+    html += '<tr>' +
+      '<td>' + y + '</td>' +
+      '<td>' + (d.chinaEx / 1000000).toFixed(1) + 'B</td>' +
+      '<td>' + (d.totalEx / 1000000).toFixed(1) + 'B</td>' +
+      '<td class="' + (exR > 35 ? 'down' : '') + '">' + exR.toFixed(1) + '%</td>' +
+      '<td>' + (d.chinaIm / 1000000).toFixed(1) + 'B</td>' +
+      '<td>' + (d.totalIm / 1000000).toFixed(1) + 'B</td>' +
+      '<td>' + imR.toFixed(1) + '%</td>' +
+      '<td class="' + (sp >= 0 ? 'up' : 'down') + '">' + (sp >= 0 ? '+' : '') + sp.toFixed(1) + 'B</td>' +
+    '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('cs-table').innerHTML = html;
+}
+
+/* ==========================================================
+   RENDER: Tab 4 — Trade Overview (3 charts)
+   ========================================================== */
+function renderOverview() {
+  if (!exportData || !importData) return;
+
+  const yearlyEx = {};
+  const yearlyIm = {};
+  for (const d of exportData.data) {
+    if (!yearlyEx[d.year]) yearlyEx[d.year] = 0;
+    for (const v of Object.values(d.values)) yearlyEx[d.year] += v;
+  }
+  for (const d of importData.data) {
+    if (!yearlyIm[d.year]) yearlyIm[d.year] = 0;
+    for (const v of Object.values(d.values)) yearlyIm[d.year] += v;
+  }
+  const years = [...new Set([...Object.keys(yearlyEx), ...Object.keys(yearlyIm)])].map(Number).sort((a, b) => a - b);
+
+  /* Chart 22: Total Import/Export & Balance (grouped bar + line) */
+  const exArr = years.map(y => (yearlyEx[y] || 0) / 1000000);
+  const imArr = years.map(y => (yearlyIm[y] || 0) / 1000000);
+  const balArr = years.map((y, i) => exArr[i] - imArr[i]);
+
+  getChart('ovTotal');
+  charts.ovTotal = new Chart(document.getElementById('chart-ov-total'), {
+    type: 'bar',
+    data: { labels: years, datasets: [
+      { label: 'Exports (B)', data: exArr, backgroundColor: '#2563eb', borderRadius: 4, yAxisID: 'y' },
+      { label: 'Imports (B)', data: imArr, backgroundColor: '#f97316', borderRadius: 4, yAxisID: 'y' },
+      { label: 'Trade Balance (B)', data: balArr, type: 'line', borderColor: '#10b981', backgroundColor: '#10b98120', yAxisID: 'y', tension: 0.35, pointRadius: 3, borderWidth: 2.5, fill: false },
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index' },
+      plugins: { legend: { labels: { usePointStyle: true }}, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': US$' + ctx.parsed.y.toFixed(1) + 'B' }}},
+      scales: withAxisDefaults({ y: { }})
+    }
+  });
+
+  /* Chart 23: Top 5 Export Markets Over Time (stacked area) */
+  const top5Keys = Object.keys(KEY_COUNTRIES).slice(0, 5);
+  const top5Yearly = {};
+  for (const name of top5Keys) {
+    top5Yearly[name] = {};
+    const col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+    if (!col) continue;
+    for (const d of exportData.data) {
+      if (!top5Yearly[name][d.year]) top5Yearly[name][d.year] = 0;
+      top5Yearly[name][d.year] += (d.values[col] || 0);
+    }
+  }
+  getChart('ovTop5');
+  charts.ovTop5 = new Chart(document.getElementById('chart-ov-top5'), {
+    type: 'line',
+    data: { labels: years, datasets: top5Keys.map((name, i) => ({
+      label: name,
+      data: years.map(y => (top5Yearly[name][y] || 0) / 1000000),
+      borderColor: COLORS[i], backgroundColor: COLORS[i] + '40',
+      fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2,
+    }))},
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true }}, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': US$' + ctx.parsed.y.toFixed(1) + 'B' }}},
+      scales: withAxisDefaults({
+        x: { stacked: true },
+        y: { stacked: true, }
+      })
+    }
+  });
+
+  /* Chart 24: Emerging Market Growth (horizontal bar — growth multiplier) */
+  const emergingData = [];
+  for (const [enName, aliases] of Object.entries(EMERGING_MARKETS)) {
+    const col = findCol(exportData.countries, aliases);
+    if (!col) continue;
+    const yearTotals = {};
+    for (const d of exportData.data) {
+      if (!yearTotals[d.year]) yearTotals[d.year] = 0;
+      yearTotals[d.year] += (d.values[col] || 0);
+    }
+    const latestYear = years[years.length - 1];
+    const baseYear = latestYear - 10;
+    const latestVal = yearTotals[latestYear] || 0;
+    const baseVal = yearTotals[baseYear] || 0;
+    if (baseVal > 0) {
+      emergingData.push({ name: enName, multiplier: latestVal / baseVal });
+    }
+  }
+  emergingData.sort((a, b) => b.multiplier - a.multiplier);
+
+  getChart('ovEmerging');
+  charts.ovEmerging = new Chart(document.getElementById('chart-ov-emerging'), {
+    type: 'bar',
+    data: { labels: emergingData.map(d => d.name), datasets: [{
+      data: emergingData.map(d => d.multiplier),
+      backgroundColor: COLORS.slice(0, emergingData.length),
+      borderRadius: 6, barPercentage: 0.65,
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.x.toFixed(2) + 'x' }}},
+      scales: withAxisDefaults({ x: { }})
+    }
+  });
+}
+
+/* ========== Init ========== */
+async function init() {
+  const loading = document.getElementById('loading');
+  try {
+    const [exText, imText, icText] = await Promise.all([
+      fetchCSV(CSV_EXPORT),
+      fetchCSV(CSV_IMPORT),
+      fetchCSV(CSV_IC),
+    ]);
+
+    exportData = parseTradeByCountry(exText);
+    importData = parseTradeByCountry(imText);
+    icData = parseICData(icText);
+
+    if (!exportData || exportData.data.length === 0) throw new Error('Failed to parse export data');
+    if (!importData || importData.data.length === 0) throw new Error('Failed to parse import data');
+
+    /* Populate pill selector */
+    const pillBox = document.getElementById('trend-countries');
+    const defaults = ['China', 'USA', 'Japan', 'South Korea', 'Singapore'];
+    Object.keys(KEY_COUNTRIES).forEach((name, i) => {
+      const col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+      if (!col) return;
+      const pill = document.createElement('span');
+      pill.className = 'pill' + (defaults.includes(name) ? ' active' : '');
+      pill.dataset.country = name;
+      pill.innerHTML = '<span class="dot" style="background:' + COLORS[i % COLORS.length] + '"></span>' + name;
+      pill.addEventListener('click', () => { pill.classList.toggle('active'); renderTrend(); });
+      pillBox.appendChild(pill);
+    });
+
+    loading.style.display = 'none';
+
+    renderTrend();
+    renderShare();
+    renderRegionShare();
+    renderHHI();
+    renderHeatmap();
+    renderYoYCountry();
+    renderSemiconductor();
+    renderCrossStrait();
+    renderOverview();
+  } catch (err) {
+    loading.innerHTML = '<div class="error-box">Data load failed: ' + err.message + '<br><small>Please check your network connection or GCS CORS settings.</small></div>';
+    console.error(err);
+  }
+}
+
+init();
+</script>
+
+<script>document.querySelectorAll(".current-year").forEach(function (el) { el.textContent = new Date().getFullYear(); });</script>
+
+<footer class="open-source-attribution" style="padding:24px;text-align:center"><a href="https://upliftorch.com/">Upliftorch</a> · <a href="https://upliftorch.com/tools/trade-analysis/">Official demo / 線上工具</a></footer>
+</body>
+</html>

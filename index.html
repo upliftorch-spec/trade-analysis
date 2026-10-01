@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://upliftorch.com/tools/trade-analysis/">
+<link rel="alternate" hreflang="zh-TW" href="https://upliftorch.com/tools/trade-analysis/">
+<link rel="alternate" hreflang="en" href="https://upliftorch.com/tools/trade-analysis/en/">
+<link rel="alternate" hreflang="x-default" href="https://upliftorch.com/tools/trade-analysis/en/">
+<title>台灣外銷數據分析 — 出口趨勢 · 半導體 · 兩岸貿易 · 貿易總覽</title>
+<meta name="description" content="運用財政部公開資料，視覺化台灣出口趨勢、半導體貿易與兩岸經貿依賴度分析。">
+<meta name="keywords" content="台灣出口,外銷分析,半導體出口,兩岸貿易,貿易數據,trade analysis">
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#f0f2f5;--bg2:#e4e7ec;--card:#fff;--text:#111827;--text2:#6b7280;--text3:#9ca3af;
+  --primary:#2563eb;--primary-light:#dbeafe;--primary-dark:#1d4ed8;
+  --accent:#f97316;--accent-light:#fff7ed;
+  --success:#10b981;--danger:#ef4444;
+  --border:#e5e7eb;--border2:#d1d5db;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 24px rgba(0,0,0,.08);
+  --radius:12px;--radius-sm:8px;
+  --heatmap-low:#dbeafe;--heatmap-high:#1d4ed8;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#0b0f1a;--bg2:#131829;--card:#1a1f36;--text:#f1f5f9;--text2:#94a3b8;--text3:#64748b;
+  --primary:#3b82f6;--primary-light:#1e3a5f;--primary-dark:#60a5fa;
+  --accent:#fb923c;--accent-light:#2d1f0e;
+  --success:#34d399;--danger:#f87171;
+  --border:#1e293b;--border2:#334155;
+  --shadow:0 1px 3px rgba(0,0,0,.2);--shadow-lg:0 4px 24px rgba(0,0,0,.3);
+  --heatmap-low:#1e293b;--heatmap-high:#3b82f6;
+}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+
+/* Header */
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 50%,#3b82f6 100%);color:#fff;padding:3rem 1.5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='m36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.hero h1{font-size:2rem;font-weight:800;margin-bottom:.4rem;position:relative}
+.hero p{opacity:.8;font-size:.95rem;position:relative}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);padding:.25rem .75rem;border-radius:20px;font-size:.75rem;margin-top:.8rem;position:relative}
+.lang-switch{position:absolute;top:1.2rem;right:1.5rem;color:#fff;text-decoration:none;font-size:.8rem;border:1px solid rgba(255,255,255,.4);padding:.3rem .8rem;border-radius:20px;transition:.2s;z-index:1}
+.lang-switch:hover{background:rgba(255,255,255,.2)}
+
+/* Tabs */
+.tab-bar{display:flex;justify-content:center;gap:.5rem;padding:1rem 1.5rem;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px)}
+.tab-btn{display:flex;align-items:center;gap:.4rem;padding:.55rem 1.2rem;border:none;border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;font-size:.85rem;font-weight:500;transition:.2s}
+.tab-btn:hover{background:var(--primary-light);color:var(--primary)}
+.tab-btn.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3)}
+.tab-btn .icon{font-size:1rem}
+
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:1.5rem}
+.breadcrumb{font-size:13px;color:var(--text-secondary,#64748b);margin-bottom:20px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.breadcrumb a{color:var(--text-secondary,#64748b)}
+.breadcrumb a:hover{color:var(--primary,#ec4899)}
+.breadcrumb .sep{opacity:.5}
+.breadcrumb [aria-current]{color:var(--text,#1e293b);font-weight:600}
+.card{background:var(--card);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:var(--shadow);border:1px solid var(--border)}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem}
+.card-header h2{font-size:1.1rem;font-weight:700;color:var(--text)}
+.card-header .tag{font-size:.7rem;background:var(--primary-light);color:var(--primary);padding:.2rem .6rem;border-radius:12px;font-weight:600}
+.card-desc{color:var(--text2);font-size:.82rem;margin-top:.15rem}
+.chart-box{position:relative;width:100%;min-height:340px}
+.chart-box canvas{display:block}
+
+/* Stats */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;margin-bottom:1.25rem}
+.kpi{background:var(--card);border-radius:var(--radius-sm);padding:1rem 1.2rem;border:1px solid var(--border);box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--primary);border-radius:4px 0 0 4px}
+.kpi.warn::before{background:var(--accent)}
+.kpi.danger::before{background:var(--danger)}
+.kpi.success::before{background:var(--success)}
+.kpi .num{font-size:1.5rem;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.kpi .lbl{font-size:.75rem;color:var(--text2);margin-top:.15rem}
+
+/* Controls */
+.ctrl-bar{display:flex;gap:.6rem;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.ctrl-bar label{font-size:.8rem;color:var(--text2);display:flex;align-items:center;gap:.3rem}
+.ctrl-bar select,.ctrl-bar input[type=number]{padding:.4rem .6rem;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--card);color:var(--text);font-size:.82rem;outline:none;transition:.2s}
+.ctrl-bar select:focus,.ctrl-bar input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.btn{padding:.45rem 1rem;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:.82rem;font-weight:600;transition:.2s}
+.btn:hover{background:var(--primary-dark);box-shadow:0 2px 8px rgba(37,99,235,.3)}
+
+/* Table */
+.tbl-wrap{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{padding:.55rem .7rem;text-align:right;border-bottom:1px solid var(--border)}
+th{background:var(--bg2);color:var(--text2);font-weight:600;position:sticky;top:0;z-index:1}
+td:first-child,th:first-child{text-align:left;font-weight:600}
+tr:hover td{background:var(--primary-light)}
+.up{color:var(--success)}
+.down{color:var(--danger)}
+
+/* Loading & Error */
+.loading{text-align:center;padding:4rem 1rem;color:var(--text2)}
+.spinner{display:inline-block;width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tab-content{display:none}.tab-content.active{display:block}
+.error-box{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:1.2rem;border-radius:var(--radius-sm);text-align:center}
+@media(prefers-color-scheme:dark){.error-box{background:#2d1215;border-color:#5c2026;color:#fca5a5}}
+
+footer{text-align:center;padding:2rem 1rem;color:var(--text3);font-size:.78rem;border-top:1px solid var(--border)}
+footer a{color:var(--primary);text-decoration:none}
+
+/* Section divider */
+.section-divider{display:flex;align-items:center;gap:.75rem;margin:2rem 0 1rem;padding:0 .2rem}
+.section-divider .section-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.section-divider .section-icon.blue{background:var(--primary-light);color:var(--primary)}
+.section-divider .section-icon.orange{background:var(--accent-light);color:var(--accent)}
+.section-divider .section-icon.green{background:#d1fae5;color:#059669}
+.section-divider .section-icon.purple{background:#ede9fe;color:#7c3aed}
+@media(prefers-color-scheme:dark){
+.section-divider .section-icon.green{background:#064e3b;color:#34d399}
+.section-divider .section-icon.purple{background:#2e1065;color:#a78bfa}
+}
+.section-divider .section-text h3{font-size:.9rem;font-weight:700;color:var(--text)}
+.section-divider .section-text p{font-size:.75rem;color:var(--text3);margin-top:.1rem}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Country pill selector */
+.pill-group{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem}
+.pill{display:inline-flex;align-items:center;gap:.3rem;padding:.35rem .75rem;border-radius:20px;border:1px solid var(--border2);background:var(--card);color:var(--text2);font-size:.8rem;cursor:pointer;transition:.2s;user-select:none}
+.pill:hover{border-color:var(--primary);color:var(--primary)}
+.pill.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* Heatmap */
+.heatmap-wrap{overflow-x:auto}
+.heatmap{display:grid;gap:2px;font-size:.72rem}
+.heatmap .hm-label{display:flex;align-items:center;justify-content:center;padding:.25rem .4rem;font-weight:600;color:var(--text2);white-space:nowrap}
+.heatmap .hm-cell{display:flex;align-items:center;justify-content:center;padding:.35rem .2rem;border-radius:4px;font-size:.68rem;color:var(--text);transition:.2s;cursor:default;min-width:48px}
+.heatmap .hm-cell:hover{transform:scale(1.08);box-shadow:var(--shadow-lg)}
+.heatmap .hm-header{font-weight:700;color:var(--text2);text-align:center;padding:.25rem}
+
+@media(max-width:640px){.hero h1{font-size:1.4rem}.kpi-row{grid-template-columns:1fr 1fr}.kpi .num{font-size:1.2rem}.tab-btn{padding:.45rem .8rem;font-size:.78rem}.pill{font-size:.75rem;padding:.3rem .6rem}.tab-bar{flex-wrap:wrap}}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"首頁","item":"https://upliftorch.com/"},{"@type":"ListItem","position":2,"name":"免費線上工具","item":"https://upliftorch.com/tools"},{"@type":"ListItem","position":3,"name":"外銷數據分析","item":"https://upliftorch.com/tools/trade-analysis/"}]}
+</script>
+</head>
+<body>
+
+<div class="hero">
+<a class="lang-switch" href="https://upliftorch.com/tools/trade-analysis/en/">EN</a>
+<h1>台灣外銷數據分析</h1>
+<p>即時視覺化台灣出口貿易、半導體產業與兩岸經貿關係</p>
+<div class="badge">資料來源：財政部關務署 · 財政部統計處</div>
+</div>
+
+<div class="tab-bar">
+<button class="tab-btn active" data-tab="trend"><span class="icon">📊</span> 出口趨勢</button>
+<button class="tab-btn" data-tab="semiconductor"><span class="icon">🔬</span> 半導體分析</button>
+<button class="tab-btn" data-tab="cross-strait"><span class="icon">🔗</span> 兩岸貿易</button>
+<button class="tab-btn" data-tab="overview"><span class="icon">🌐</span> 貿易總覽</button>
+</div>
+
+<div class="container">
+
+<nav class="breadcrumb" aria-label="麵包屑導覽">
+<a href="https://upliftorch.com/">首頁</a>
+<span class="sep">›</span>
+<a href="https://upliftorch.com/tools">免費線上工具</a>
+<span class="sep">›</span>
+<span aria-current="page">外銷數據分析</span>
+</nav>
+
+<div class="loading" id="loading">
+<div class="spinner"></div>
+<p style="margin-top:1rem">正在從 GCS 載入貿易資料⋯</p>
+</div>
+
+<!-- ===== Tab 1: Export Trends ===== -->
+<div class="tab-content active" id="tab-trend">
+<div class="kpi-row" id="trend-kpi"></div>
+
+<div class="section-divider"><div class="section-icon blue">📈</div><div class="section-text"><h3>國別出口分析</h3><p>依國家篩選月度出口趨勢與排名</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>各國出口金額趨勢</h2><div class="card-desc">月度出口金額，可自選國家與時間範圍</div></div>
+<div class="tag">月度</div>
+</div>
+<div class="pill-group" id="trend-countries"></div>
+<div class="ctrl-bar">
+<label>起始：<input type="number" id="trend-start" value="2018" min="2001" max="2026"></label>
+<label>結束：<input type="number" id="trend-end" value="2026" min="2001" max="2026"></label>
+<button class="btn" onclick="renderTrend()">更新</button>
+</div>
+<div class="chart-box"><canvas id="chart-trend"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>出口目的地排名</h2><div class="card-desc">近 12 個月出口總額排名</div></div>
+<div class="tag">TOP 10</div>
+</div>
+<div class="chart-box" style="min-height:280px"><canvas id="chart-share"></canvas></div>
+</div>
+<div class="section-divider"><div class="section-icon orange">🌍</div><div class="section-text"><h3>區域結構與集中度</h3><p>洲別佔比、集中度指數、季節性與成長率</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>洲別出口佔比</h2><div class="card-desc">各大洲出口金額佔比趨勢（堆疊面積圖）</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-region-share"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>出口集中度 HHI</h2><div class="card-desc">赫芬達爾指數衡量出口目的地集中程度，越高越集中</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-hhi"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>月度季節性熱力圖</h2><div class="card-desc">各年各月總出口金額分布，顏色越深金額越高</div></div>
+<div class="tag">月度</div>
+</div>
+<div class="heatmap-wrap" id="heatmap-wrap"></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>主要國家年增率比較</h2><div class="card-desc">前 5 大出口國年度成長率</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-yoy-compare"></canvas></div>
+</div>
+</div>
+
+<!-- ===== Tab 2: Semiconductor ===== -->
+<div class="tab-content" id="tab-semiconductor">
+<div class="kpi-row" id="ic-kpi"></div>
+
+<div class="section-divider"><div class="section-icon blue">📤</div><div class="section-text"><h3>IC 出口分析</h3><p>出口總額、目的地分布與產品結構</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>IC 出口總額與年增率</h2><div class="card-desc">年度積體電路出口金額（億美元）</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-total"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC 出口目的地分布</h2><div class="card-desc">各地區佔比變化（堆疊圖）</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-region"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC 產品類別結構</h2><div class="card-desc">處理器、記憶體、混合 IC 等子類別</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-product"></canvas></div>
+</div>
+<div class="section-divider"><div class="section-icon green">📥</div><div class="section-text"><h3>IC 進口與產業地位</h3><p>進出口對比、進口來源與 IC 佔總出口比例</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>IC 進出口對比</h2><div class="card-desc">年度 IC 出口與進口金額並列比較</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-exim"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC 進口來源地</h2><div class="card-desc">各地區進口金額堆疊圖</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-import-region"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC 佔總出口比例</h2><div class="card-desc">半導體出口佔台灣總出口的百分比</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-ic-ratio"></canvas></div>
+</div>
+</div>
+
+<!-- ===== Tab 3: Cross-Strait ===== -->
+<div class="tab-content" id="tab-cross-strait">
+<div class="kpi-row" id="cs-kpi"></div>
+
+<div class="section-divider"><div class="section-icon orange">⚠️</div><div class="section-text"><h3>依賴度與半導體風險</h3><p>出口依賴度、IC 對中佔比與歷史數據</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>對中貿易依賴度趨勢</h2><div class="card-desc">台灣對中國大陸（含香港）出口 / 進口佔總額比例</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-ratio"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>IC 對中國出口 vs 其他地區</h2><div class="card-desc">半導體產業的中國依賴程度</div></div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-ic"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>兩岸貿易年度明細</h2><div class="card-desc">出口、進口、順差與依賴度</div></div>
+</div>
+<div class="tbl-wrap" id="cs-table"></div>
+</div>
+<div class="section-divider"><div class="section-icon green">🔄</div><div class="section-text"><h3>順差波動與市場轉移</h3><p>貿易順差來源、月度波動與替代市場成長</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>貿易順差趨勢</h2><div class="card-desc">對中順差與整體貿易順差比較</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-surplus"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>月度對中出口波動</h2><div class="card-desc">台灣對中國大陸（含香港）月度出口金額</div></div>
+<div class="tag">月度</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-monthly"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>替代市場成長率</h2><div class="card-desc">東協、印度、美國、越南等年度出口成長率</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-cs-alt"></canvas></div>
+</div>
+</div>
+
+<!-- ===== Tab 4: Overview ===== -->
+<div class="tab-content" id="tab-overview">
+
+<div class="section-divider"><div class="section-icon blue">📊</div><div class="section-text"><h3>總體貿易概況</h3><p>進出口總額、貿易差額與主要市場消長</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>進出口與貿易差額</h2><div class="card-desc">年度總出口、總進口與貿易順差趨勢</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-ov-balance"></canvas></div>
+</div>
+<div class="card">
+<div class="card-header">
+<div><h2>前 5 大出口國年度變化</h2><div class="card-desc">堆疊面積圖呈現主要市場變遷</div></div>
+<div class="tag">年度</div>
+</div>
+<div class="chart-box"><canvas id="chart-ov-top5"></canvas></div>
+</div>
+<div class="section-divider"><div class="section-icon purple">🚀</div><div class="section-text"><h3>新興市場成長</h3><p>近 10 年出口成長倍數，辨識新興機會</p></div></div>
+
+<div class="card">
+<div class="card-header">
+<div><h2>新興市場崛起</h2><div class="card-desc">近 10 年出口成長倍數（2024 vs 2014）</div></div>
+<div class="tag">成長倍數</div>
+</div>
+<div class="chart-box" style="min-height:300px"><canvas id="chart-ov-emerging"></canvas></div>
+</div>
+</div>
+
+</div>
+
+<footer>
+<p>資料來源：<a href="https://web.customs.gov.tw" target="_blank" rel="noopener">財政部關務署</a> ·
+<a href="https://service.mof.gov.tw" target="_blank" rel="noopener">財政部統計處</a>　|
+<a href="en/">EN</a></p>
+<p style="margin-top:.3rem" id="footer-year"></p>
+</footer>
+
+<script>
+document.getElementById('footer-year').textContent = '\u00A9 ' + new Date().getFullYear() + ' 台灣外銷數據分析';
+
+/* ========== Tab Switching ========== */
+document.querySelectorAll('.tab-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* ========== Data Sources ========== */
+var GCS_BASE = 'https://storage.googleapis.com/upliftorch_tool/trade-analysis/data';
+var CSV_EXPORT = GCS_BASE + '/u2010ex.csv';
+var CSV_IMPORT = GCS_BASE + '/u2010im.csv';
+var CSV_IC = GCS_BASE + '/ic_trade.csv';
+
+var exportData = null, importData = null, icData = null;
+var charts = {};
+
+/* ========== CSV Parser ========== */
+function parseCSV(text, delim) {
+  if (!delim) delim = ',';
+  var lines = text.replace(/\r/g, '').trim().split('\n');
+  return lines.map(function(line) {
+    var row = [];
+    var inQ = false, cell = '';
+    for (var i = 0; i < line.length; i++) {
+      var c = line[i];
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === delim && !inQ) { row.push(cell.trim()); cell = ''; continue; }
+      cell += c;
+    }
+    row.push(cell.trim());
+    return row;
+  });
+}
+
+async function fetchCSV(url) {
+  var resp = await fetch(url);
+  if (!resp.ok) throw new Error('HTTP ' + resp.status + ': ' + url);
+  var buf = await resp.arrayBuffer();
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(buf);
+  } catch(e) {
+    return new TextDecoder('big5').decode(buf);
+  }
+}
+
+/* ========== Parse Trade by Country ========== */
+function parseTradeByCountry(text) {
+  var rows = parseCSV(text);
+  if (rows.length < 2) return null;
+  var countries = rows[0].slice(1).map(function(h) {
+    return h.replace(/\(千\)/g, '').replace(/\(千美元\)/g, '').replace(/\(USD Thousand\)/g, '').replace(/\(千元\)/g, '').trim();
+  });
+  var data = [];
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    if (!row[0]) continue;
+    var m = row[0].match(/(\d{4})[年~～](\d{1,2})/);
+    if (!m) continue;
+    var year = parseInt(m[1]), month = parseInt(m[2]);
+    var values = {};
+    for (var j = 1; j < row.length && j - 1 < countries.length; j++) {
+      var v = parseFloat(row[j].replace(/,/g, ''));
+      if (!isNaN(v)) values[countries[j - 1]] = v;
+    }
+    data.push({ year: year, month: month, date: year + '-' + String(month).padStart(2, '0'), values: values });
+  }
+  return { countries: countries, data: data };
+}
+
+/* ========== Parse IC Data (TSV) ========== */
+function parseICData(text) {
+  var rows = parseCSV(text, '\t');
+  if (rows.length < 2) return null;
+  var header = rows[0];
+  var data = [];
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    if (!row[0] || !row[0].trim()) continue;
+    var rocYear = parseInt(row[0]);
+    if (isNaN(rocYear) || rocYear < 80) continue;
+    var obj = { year: rocYear + 1911, rocYear: rocYear };
+    for (var j = 1; j < header.length && j < row.length; j++) {
+      var val = parseFloat(row[j]);
+      if (!isNaN(val)) obj[header[j].trim()] = val;
+    }
+    data.push(obj);
+  }
+  return data;
+}
+
+/* ========== Country Helpers ========== */
+var KEY_COUNTRIES = {
+  '中國大陸': ['中國大陸'], '香港': ['香港'], '美國': ['美國'], '日本': ['日本'],
+  '南韓': ['韓國','南韓'], '新加坡': ['新加坡'], '德國': ['德國'],
+  '越南': ['越南'], '馬來西亞': ['馬來西亞'], '荷蘭': ['荷蘭']
+};
+
+var REGION_KEYS = ['亞洲', '中東', '歐洲', '北美洲', '中美洲', '南美洲', '大洋洲', '非洲'];
+
+function findCol(countries, aliases) {
+  for (var a = 0; a < aliases.length; a++) {
+    var idx = countries.findIndex(function(c) { return c.includes(aliases[a]); });
+    if (idx >= 0) return countries[idx];
+  }
+  return null;
+}
+
+var COLORS = ['#2563eb','#f97316','#10b981','#ef4444','#8b5cf6','#eab308','#06b6d4','#ec4899','#6366f1','#14b8a6'];
+var COLORS_SOFT = COLORS.map(function(c) { return c + '18'; });
+
+/* ========== High DPI & Global Chart Defaults ========== */
+/* 讓 Chart.js 自動使用瀏覽器原生 devicePixelRatio，不強制覆蓋 */
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif";
+
+/* 全域強制所有軸標籤水平不旋轉 */
+Chart.defaults.scales.linear.ticks.maxRotation = 0;
+Chart.defaults.scales.linear.ticks.minRotation = 0;
+Chart.defaults.scales.linear.ticks.autoSkip = true;
+Chart.defaults.scales.linear.ticks.autoSkipPadding = 12;
+Chart.defaults.scales.category.ticks.maxRotation = 0;
+Chart.defaults.scales.category.ticks.minRotation = 0;
+Chart.defaults.scales.category.ticks.autoSkip = true;
+Chart.defaults.scales.category.ticks.autoSkipPadding = 12;
+
+/* 保留 withAxisDefaults 做額外 merge（向下相容） */
+var AXIS_DEFAULTS = {
+  ticks: { maxRotation: 0, minRotation: 0, autoSkip: true, autoSkipPadding: 12 }
+};
+function withAxisDefaults(scales) {
+  var out = {};
+  for (var key of Object.keys(scales)) {
+    var val = scales[key];
+    out[key] = Object.assign({}, val, { ticks: Object.assign({}, AXIS_DEFAULTS.ticks, val.ticks || {}) });
+  }
+  return out;
+}
+
+/* ========== Format Helpers ========== */
+function fmtB(v) { return 'US$' + (v / 1000000).toFixed(1) + 'B'; }
+function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + '%'; }
+
+/* ========== Chart Destroy Helper ========== */
+function getChart(id) { if (charts[id]) charts[id].destroy(); }
+
+/* ========== Helper: Get yearly totals from trade data ========== */
+function getYearlyTotals(tradeData) {
+  var yearly = {};
+  for (var i = 0; i < tradeData.data.length; i++) {
+    var d = tradeData.data[i];
+    if (!yearly[d.year]) yearly[d.year] = {};
+    for (var key of Object.keys(d.values)) {
+      if (!yearly[d.year][key]) yearly[d.year][key] = 0;
+      yearly[d.year][key] += d.values[key];
+    }
+  }
+  return yearly;
+}
+
+/* ========== Helper: Find region columns ========== */
+function findRegionCols(countries) {
+  var result = {};
+  for (var r = 0; r < REGION_KEYS.length; r++) {
+    var rk = REGION_KEYS[r];
+    var col = countries.find(function(c) { return c.includes(rk); });
+    if (col) result[rk] = col;
+  }
+  return result;
+}
+
+/* ========== Render: Export Trends (Tab 1) ========== */
+function renderTrend() {
+  if (!exportData) return;
+  var sy = parseInt(document.getElementById('trend-start').value) || 2018;
+  var ey = parseInt(document.getElementById('trend-end').value) || 2026;
+  var sel = Array.from(document.querySelectorAll('#trend-countries .pill.active')).map(function(p) { return p.dataset.country; });
+  var filt = exportData.data.filter(function(d) { return d.year >= sy && d.year <= ey; });
+
+  var datasets = sel.map(function(name, i) {
+    var col = findCol(exportData.countries, KEY_COUNTRIES[name] || [name]);
+    return {
+      label: name, data: filt.map(function(d) { return col ? (d.values[col] || 0) : 0; }),
+      borderColor: COLORS[i % COLORS.length], backgroundColor: COLORS_SOFT[i % COLORS.length],
+      fill: false, tension: 0.35, pointRadius: 0, borderWidth: 2.5
+    };
+  });
+
+  getChart('trend');
+  charts.trend = new Chart(document.getElementById('chart-trend'), {
+    type: 'line',
+    data: { labels: filt.map(function(d) { return d.date; }), datasets: datasets },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyle: 'circle' }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + fmtB(ctx.parsed.y); } }}},
+      scales: withAxisDefaults({
+        y: { ticks: { callback: function(v) { return (v / 1000000).toFixed(0) + 'B'; } }},
+        x: { ticks: { maxTicksLimit: 24 }}
+      })
+    }
+  });
+
+  /* KPIs */
+  var last12 = exportData.data.slice(-12);
+  var t12 = 0; last12.forEach(function(d) { var tc = findCol(exportData.countries, ['總計']); if (tc && d.values[tc]) t12 += d.values[tc]; });
+  if (t12 === 0) last12.forEach(function(d) { Object.values(d.values).forEach(function(v) { t12 += v; }); });
+  var prev12 = exportData.data.slice(-24, -12);
+  var p12 = 0; prev12.forEach(function(d) { var tc = findCol(exportData.countries, ['總計']); if (tc && d.values[tc]) p12 += d.values[tc]; });
+  if (p12 === 0) prev12.forEach(function(d) { Object.values(d.values).forEach(function(v) { p12 += v; }); });
+  var growth = p12 > 0 ? ((t12 - p12) / p12 * 100) : 0;
+
+  document.getElementById('trend-kpi').innerHTML =
+    '<div class="kpi"><div class="num">' + fmtB(t12) + '</div><div class="lbl">近 12 月總出口</div></div>' +
+    '<div class="kpi ' + (growth >= 0 ? 'success' : 'danger') + '"><div class="num">' + fmtPct(growth) + '</div><div class="lbl">年增率 (YoY)</div></div>' +
+    '<div class="kpi"><div class="num">' + exportData.data.length.toLocaleString() + '</div><div class="lbl">月份資料點</div></div>' +
+    '<div class="kpi"><div class="num">' + exportData.countries.length + '</div><div class="lbl">國家 / 地區</div></div>';
+}
+
+function renderShare() {
+  if (!exportData) return;
+  var last12 = exportData.data.slice(-12);
+  var totals = {};
+  for (var name of Object.keys(KEY_COUNTRIES)) {
+    var col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+    if (!col) continue;
+    totals[name] = 0;
+    last12.forEach(function(d) { totals[name] += (d.values[col] || 0); });
+  }
+  var sorted = Object.entries(totals).sort(function(a, b) { return b[1] - a[1]; });
+  getChart('share');
+  charts.share = new Chart(document.getElementById('chart-share'), {
+    type: 'bar',
+    data: { labels: sorted.map(function(s) { return s[0]; }), datasets: [{
+      data: sorted.map(function(s) { return s[1]; }),
+      backgroundColor: COLORS.slice(0, sorted.length),
+      borderRadius: 6, barPercentage: 0.65
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { return fmtB(ctx.parsed.x); } }}},
+      scales: withAxisDefaults({ x: { ticks: { callback: function(v) { return (v / 1000000).toFixed(0) + 'B'; } }}})
+    }
+  });
+}
+
+/* Chart 12: Regional export share stacked area */
+function renderRegionShare() {
+  if (!exportData) return;
+  var regionCols = findRegionCols(exportData.countries);
+  var yearlyTotals = getYearlyTotals(exportData);
+  var years = Object.keys(yearlyTotals).map(Number).sort(function(a, b) { return a - b; });
+
+  var displayRegions = ['亞洲', '歐洲', '北美洲', '南美洲', '大洋洲', '非洲', '中東'];
+  var datasets = [];
+  for (var i = 0; i < displayRegions.length; i++) {
+    var rk = displayRegions[i];
+    var col = regionCols[rk];
+    if (!col) continue;
+    datasets.push({
+      label: rk,
+      data: years.map(function(y) { return (yearlyTotals[y][col] || 0) / 1000000; }),
+      backgroundColor: COLORS[i % COLORS.length] + '88',
+      borderColor: COLORS[i % COLORS.length],
+      borderWidth: 1.5,
+      fill: true
+    });
+  }
+
+  getChart('regionShare');
+  charts.regionShare = new Chart(document.getElementById('chart-region-share'), {
+    type: 'line',
+    data: { labels: years, datasets: datasets },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': US$' + ctx.parsed.y.toFixed(1) + 'B'; } }}},
+      scales: withAxisDefaults({
+        x: { ticks: { maxTicksLimit: 20 }},
+        y: { stacked: true, }
+      })
+    }
+  });
+}
+
+/* Chart 13: HHI concentration index */
+function renderHHI() {
+  if (!exportData) return;
+  var yearlyTotals = getYearlyTotals(exportData);
+  var years = Object.keys(yearlyTotals).map(Number).sort(function(a, b) { return a - b; });
+
+  var hhiCountryNames = Object.keys(KEY_COUNTRIES);
+  var hhiValues = years.map(function(y) {
+    var yd = yearlyTotals[y];
+    var totalCol = findCol(exportData.countries, ['總計']);
+    var total = totalCol ? (yd[totalCol] || 0) : 0;
+    if (total === 0) return 0;
+    var hhi = 0;
+    for (var n = 0; n < hhiCountryNames.length; n++) {
+      var name = hhiCountryNames[n];
+      var col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+      if (!col) continue;
+      var share = ((yd[col] || 0) / total) * 100;
+      hhi += share * share;
+    }
+    return Math.round(hhi);
+  });
+
+  getChart('hhi');
+  charts.hhi = new Chart(document.getElementById('chart-hhi'), {
+    type: 'line',
+    data: { labels: years, datasets: [{
+      label: 'HHI 指數',
+      data: hhiValues,
+      borderColor: '#8b5cf6',
+      backgroundColor: '#8b5cf618',
+      fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 3
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { return 'HHI: ' + ctx.parsed.y; } }}},
+      scales: withAxisDefaults({
+        x: { ticks: { maxTicksLimit: 20 }},
+        y: { min: 0 }
+      })
+    }
+  });
+}
+
+/* Chart 14: Seasonality heatmap (CSS grid, NOT Chart.js) */
+function renderHeatmap() {
+  if (!exportData) return;
+  var monthly = {};
+  var totalCol = findCol(exportData.countries, ['總計']);
+  for (var i = 0; i < exportData.data.length; i++) {
+    var d = exportData.data[i];
+    var val = totalCol ? (d.values[totalCol] || 0) : 0;
+    if (val === 0) { Object.values(d.values).forEach(function(v) { val += v; }); }
+    if (!monthly[d.year]) monthly[d.year] = {};
+    monthly[d.year][d.month] = val;
+  }
+
+  var years = Object.keys(monthly).map(Number).sort(function(a, b) { return a - b; });
+  var allVals = [];
+  for (var y = 0; y < years.length; y++) {
+    for (var m = 1; m <= 12; m++) {
+      if (monthly[years[y]][m]) allVals.push(monthly[years[y]][m]);
+    }
+  }
+  var minV = Math.min.apply(null, allVals);
+  var maxV = Math.max.apply(null, allVals);
+  var range = maxV - minV || 1;
+
+  var wrap = document.getElementById('heatmap-wrap');
+  var html = '<div class="heatmap" style="grid-template-columns: 60px repeat(12, 1fr);">';
+  html += '<div class="hm-label"></div>';
+  var monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  for (var mi = 0; mi < 12; mi++) {
+    html += '<div class="hm-header">' + monthNames[mi] + '</div>';
+  }
+
+  for (var yi = 0; yi < years.length; yi++) {
+    var yr = years[yi];
+    html += '<div class="hm-label">' + yr + '</div>';
+    for (var mo = 1; mo <= 12; mo++) {
+      var v = monthly[yr][mo];
+      if (v !== undefined) {
+        var intensity = (v - minV) / range;
+        var r = Math.round(219 - intensity * 182);
+        var g = Math.round(234 - intensity * 156);
+        var b = Math.round(254 - intensity * 40);
+        var darkR = Math.round(30 + intensity * 29);
+        var darkG = Math.round(41 + intensity * 89);
+        var darkB = Math.round(59 + intensity * 187);
+        var lightBg = 'rgb(' + r + ',' + g + ',' + b + ')';
+        var darkBg = 'rgb(' + darkR + ',' + darkG + ',' + darkB + ')';
+        var label = (v / 1000000).toFixed(1) + 'B';
+        html += '<div class="hm-cell" style="background:' + lightBg + ';" data-dark="' + darkBg + '" data-light="' + lightBg + '" title="' + yr + '年' + mo + '月: US$' + label + '">' + label + '</div>';
+      } else {
+        html += '<div class="hm-cell" style="background:var(--bg2);color:var(--text3);">-</div>';
+      }
+    }
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+
+  /* Apply dark mode colors if needed */
+  applyHeatmapTheme();
+}
+
+function applyHeatmapTheme() {
+  var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var cells = document.querySelectorAll('.hm-cell[data-dark]');
+  cells.forEach(function(cell) {
+    if (isDark) {
+      cell.style.background = cell.dataset.dark;
+      cell.style.color = '#f1f5f9';
+    } else {
+      cell.style.background = cell.dataset.light;
+      cell.style.color = '#111827';
+    }
+  });
+}
+
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyHeatmapTheme);
+}
+
+/* Chart 15: Top 5 countries YoY growth comparison */
+function renderYoYCompare() {
+  if (!exportData) return;
+  var yearlyTotals = getYearlyTotals(exportData);
+  var years = Object.keys(yearlyTotals).map(Number).sort(function(a, b) { return a - b; });
+  if (years.length < 2) return;
+
+  /* Determine top 5 by most recent year */
+  var latestYear = years[years.length - 1];
+  var latestData = yearlyTotals[latestYear];
+  var countryTotals = [];
+  for (var name of Object.keys(KEY_COUNTRIES)) {
+    var col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+    if (!col) continue;
+    countryTotals.push({ name: name, col: col, val: latestData[col] || 0 });
+  }
+  countryTotals.sort(function(a, b) { return b.val - a.val; });
+  var top5 = countryTotals.slice(0, 5);
+
+  var growthYears = years.slice(1);
+  var datasets = top5.map(function(c, i) {
+    var data = growthYears.map(function(y, idx) {
+      var prev = yearlyTotals[years[idx]][c.col] || 0;
+      var curr = yearlyTotals[y][c.col] || 0;
+      if (prev === 0) return 0;
+      return ((curr - prev) / prev * 100);
+    });
+    return {
+      label: c.name, data: data,
+      borderColor: COLORS[i], backgroundColor: COLORS_SOFT[i],
+      fill: false, tension: 0.35, borderWidth: 2, pointRadius: 2
+    };
+  });
+
+  getChart('yoyCompare');
+  charts.yoyCompare = new Chart(document.getElementById('chart-yoy-compare'), {
+    type: 'line',
+    data: { labels: growthYears, datasets: datasets },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%'; } }}},
+      scales: withAxisDefaults({
+        x: { ticks: { maxTicksLimit: 20 }},
+        y: { }
+      })
+    }
+  });
+}
+
+/* ========== Render: Semiconductor (Tab 2) ========== */
+function renderSemiconductor() {
+  if (!icData || icData.length === 0) return;
+  var years = icData.map(function(d) { return d.year; });
+  var exV = icData.map(function(d) { return d['出口IC'] || 0; });
+  var exG = icData.map(function(d) { return d['出口年增率'] || 0; });
+  var latest = icData[icData.length - 1];
+  var exIC = latest['出口IC'] || 0;
+  var imIC = latest['進口IC'] || 0;
+  var gRate = latest['出口年增率'] || 0;
+
+  document.getElementById('ic-kpi').innerHTML =
+    '<div class="kpi"><div class="num">US$' + exIC.toFixed(0) + 'B</div><div class="lbl">' + latest.year + ' IC 出口</div></div>' +
+    '<div class="kpi ' + (gRate >= 0 ? 'success' : 'danger') + '"><div class="num">' + fmtPct(gRate) + '</div><div class="lbl">年增率</div></div>' +
+    '<div class="kpi"><div class="num">US$' + imIC.toFixed(0) + 'B</div><div class="lbl">' + latest.year + ' IC 進口</div></div>' +
+    '<div class="kpi success"><div class="num">US$' + (exIC - imIC).toFixed(0) + 'B</div><div class="lbl">IC 貿易順差</div></div>';
+
+  /* Chart 5: IC total + growth */
+  getChart('icTotal');
+  charts.icTotal = new Chart(document.getElementById('chart-ic-total'), {
+    type: 'bar',
+    data: { labels: years, datasets: [
+      { label: 'IC 出口（億美元）', data: exV, backgroundColor: '#2563eb', borderRadius: 4, yAxisID: 'y' },
+      { label: '年增率 %', data: exG, type: 'line', borderColor: '#f97316', backgroundColor: '#f9731620', yAxisID: 'y1', tension: 0.35, pointRadius: 3, borderWidth: 2.5 }
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index' },
+      plugins: { legend: { labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({
+        y: { position: 'left'},
+        y1: { position: 'right', grid: { drawOnChartArea: false }}
+      })
+    }
+  });
+
+  /* Chart 6: IC export region stacked */
+  var regions = ['EX陸港','EX美國','EX日本','EX南韓','EX歐洲','EX東協','EX其他地區'];
+  var rLabels = ['中國/香港','美國','日本','南韓','歐洲','東協','其他'];
+  getChart('icRegion');
+  charts.icRegion = new Chart(document.getElementById('chart-ic-region'), {
+    type: 'bar',
+    data: { labels: years, datasets: regions.map(function(k, i) {
+      return { label: rLabels[i], data: icData.map(function(d) { return d[k] || 0; }), backgroundColor: COLORS[i] };
+    })},
+    options: {
+      responsive: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({ x: { stacked: true }, y: { stacked: true}})
+    }
+  });
+
+  /* Chart 7: IC product categories stacked */
+  var products = ['EX處理器','EX記憶體','EX單石數位IC','EX單石數位IC晶粒及晶圓','EX混合IC','EX混合IC晶粒及晶圓','EX其他'];
+  var pLabels = ['處理器','記憶體','單石數位 IC','單石數位 IC 晶粒/晶圓','混合 IC','混合 IC 晶粒/晶圓','其他'];
+  getChart('icProduct');
+  charts.icProduct = new Chart(document.getElementById('chart-ic-product'), {
+    type: 'bar',
+    data: { labels: years, datasets: products.map(function(k, i) {
+      return { label: pLabels[i], data: icData.map(function(d) { return d[k] || 0; }), backgroundColor: COLORS[i % COLORS.length] };
+    })},
+    options: {
+      responsive: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({ x: { stacked: true }, y: { stacked: true}})
+    }
+  });
+
+  /* Chart 16: IC export vs import grouped bar */
+  var imV = icData.map(function(d) { return d['進口IC'] || 0; });
+  getChart('icExIm');
+  charts.icExIm = new Chart(document.getElementById('chart-ic-exim'), {
+    type: 'bar',
+    data: { labels: years, datasets: [
+      { label: 'IC 出口', data: exV, backgroundColor: '#2563eb', borderRadius: 4 },
+      { label: 'IC 進口', data: imV, backgroundColor: '#ef4444', borderRadius: 4 }
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index' },
+      plugins: { legend: { labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + ' 億美元'; } }}},
+      scales: withAxisDefaults({
+        y: { }
+      })
+    }
+  });
+
+  /* Chart 17: IC import region stacked */
+  var imRegions = ['IM陸港','IM美國','IM日本','IM南韓','IM歐洲','IM東協','IM其他地區'];
+  var imRLabels = ['中國/香港','美國','日本','南韓','歐洲','東協','其他'];
+  getChart('icImportRegion');
+  charts.icImportRegion = new Chart(document.getElementById('chart-ic-import-region'), {
+    type: 'bar',
+    data: { labels: years, datasets: imRegions.map(function(k, i) {
+      return { label: imRLabels[i], data: icData.map(function(d) { return d[k] || 0; }), backgroundColor: COLORS[i] };
+    })},
+    options: {
+      responsive: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true }}},
+      scales: withAxisDefaults({ x: { stacked: true }, y: { stacked: true}})
+    }
+  });
+
+  /* Chart 18: IC as % of total exports */
+  renderICRatio(years);
+}
+
+function renderICRatio(icYears) {
+  if (!icData || !exportData) return;
+  var yearlyTotals = getYearlyTotals(exportData);
+  var totalCol = findCol(exportData.countries, ['總計']);
+
+  var ratioData = [];
+  var ratioLabels = [];
+  for (var i = 0; i < icData.length; i++) {
+    var d = icData[i];
+    var y = d.year;
+    var icExport = d['出口IC'] || 0; /* in 億美元 (hundred million USD) */
+    var yt = yearlyTotals[y];
+    if (!yt) continue;
+    var totalExThousands = totalCol ? (yt[totalCol] || 0) : 0;
+    if (totalExThousands === 0) continue;
+    /* IC value (億美元) * 100000 = thousands USD */
+    var ratio = (icExport * 100000) / totalExThousands * 100;
+    ratioData.push(ratio);
+    ratioLabels.push(y);
+  }
+
+  getChart('icRatio');
+  charts.icRatio = new Chart(document.getElementById('chart-ic-ratio'), {
+    type: 'line',
+    data: { labels: ratioLabels, datasets: [{
+      label: 'IC 佔總出口 %',
+      data: ratioData,
+      borderColor: '#8b5cf6', backgroundColor: '#8b5cf618',
+      fill: true, tension: 0.35, borderWidth: 2.5, pointRadius: 3
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { return 'IC 佔比: ' + ctx.parsed.y.toFixed(1) + '%'; } }}},
+      scales: withAxisDefaults({
+        y: { min: 0 }
+      })
+    }
+  });
+}
+
+/* ========== Render: Cross-Strait (Tab 3) ========== */
+function renderCrossStrait() {
+  if (!exportData || !importData) return;
+
+  var yearly = {};
+  var ensure = function(y) { if (!yearly[y]) yearly[y] = { chinaEx: 0, totalEx: 0, chinaIm: 0, totalIm: 0 }; };
+
+  var totalColEx = findCol(exportData.countries, ['總計']);
+  var totalColIm = findCol(importData.countries, ['總計']);
+
+  for (var i = 0; i < exportData.data.length; i++) {
+    var d = exportData.data[i];
+    ensure(d.year);
+    var cc = findCol(exportData.countries, ['中國大陸']);
+    var hc = findCol(exportData.countries, ['香港']);
+    if (cc) yearly[d.year].chinaEx += (d.values[cc] || 0);
+    if (hc) yearly[d.year].chinaEx += (d.values[hc] || 0);
+    if (totalColEx && d.values[totalColEx]) {
+      yearly[d.year].totalEx += d.values[totalColEx];
+    } else {
+      Object.values(d.values).forEach(function(v) { yearly[d.year].totalEx += v; });
+    }
+  }
+  for (var i = 0; i < importData.data.length; i++) {
+    var d = importData.data[i];
+    ensure(d.year);
+    var cc = findCol(importData.countries, ['中國大陸']);
+    var hc = findCol(importData.countries, ['香港']);
+    if (cc) yearly[d.year].chinaIm += (d.values[cc] || 0);
+    if (hc) yearly[d.year].chinaIm += (d.values[hc] || 0);
+    if (totalColIm && d.values[totalColIm]) {
+      yearly[d.year].totalIm += d.values[totalColIm];
+    } else {
+      Object.values(d.values).forEach(function(v) { yearly[d.year].totalIm += v; });
+    }
+  }
+
+  var years = Object.keys(yearly).map(Number).sort(function(a, b) { return a - b; });
+  if (years.length === 0) return;
+
+  var exRatios = years.map(function(y) { return yearly[y].totalEx > 0 ? (yearly[y].chinaEx / yearly[y].totalEx * 100) : 0; });
+  var imRatios = years.map(function(y) { return yearly[y].totalIm > 0 ? (yearly[y].chinaIm / yearly[y].totalIm * 100) : 0; });
+
+  var ly = yearly[years[years.length - 1]];
+  var latestExR = ly.totalEx > 0 ? (ly.chinaEx / ly.totalEx * 100) : 0;
+  var surplus = (ly.chinaEx - ly.chinaIm) / 1000000;
+
+  document.getElementById('cs-kpi').innerHTML =
+    '<div class="kpi warn"><div class="num">' + latestExR.toFixed(1) + '%</div><div class="lbl">' + years[years.length - 1] + ' 出口依賴度</div></div>' +
+    '<div class="kpi"><div class="num">' + fmtB(ly.chinaEx) + '</div><div class="lbl">對中出口</div></div>' +
+    '<div class="kpi"><div class="num">' + fmtB(ly.chinaIm) + '</div><div class="lbl">自中進口</div></div>' +
+    '<div class="kpi ' + (surplus >= 0 ? 'success' : 'danger') + '"><div class="num">' + (surplus >= 0 ? '+' : '') + 'US$' + surplus.toFixed(0) + 'B</div><div class="lbl">對中貿易順差</div></div>';
+
+  /* Chart 9: Cross-strait dependency ratio */
+  getChart('csRatio');
+  charts.csRatio = new Chart(document.getElementById('chart-cs-ratio'), {
+    type: 'line',
+    data: { labels: years, datasets: [
+      { label: '出口依賴度 %', data: exRatios, borderColor: '#ef4444', backgroundColor: '#ef444418', fill: true, tension: 0.35, borderWidth: 2.5 },
+      { label: '進口依賴度 %', data: imRatios, borderColor: '#2563eb', backgroundColor: '#2563eb18', fill: true, tension: 0.35, borderWidth: 2.5 }
+    ]},
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { usePointStyle: true }}, tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%'; } }}},
+      scales: withAxisDefaults({ y: { min: 0 }})
+    }
+  });
+
+  /* Chart 10: IC China vs others */
+  if (icData && icData.length > 0) {
+    var icYears = icData.map(function(d) { return d.year; });
+    var icChina = icData.map(function(d) { return d['EX陸港'] || 0; });
+    var icOther = icData.map(function(d) { return (d['出口IC'] || 0) - (d['EX陸港'] || 0); });
+    var icCR = icData.map(function(d) { return d['出口IC'] > 0 ? ((d['EX陸港'] || 0) / d['出口IC'] * 100) : 0; });
+
+    getChart('csIc');
+    charts.csIc = new Chart(document.getElementById('chart-cs-ic'), {
+      type: 'bar',
+      data: { labels: icYears, datasets: [
+        { label: '中國/香港', data: icChina, backgroundColor: '#ef4444', stack: 'a' },
+        { label: '其他地區', data: icOther, backgroundColor: '#2563eb', stack: 'a' },
+        { label: '中國佔比 %', data: icCR, type: 'line', borderColor: '#eab308', borderWidth: 2.5, yAxisID: 'y1', tension: 0.35, pointRadius: 3 }
+      ]},
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { usePointStyle: true }}},
+        scales: withAxisDefaults({
+          y: { stacked: true},
+          y1: { position: 'right', grid: { drawOnChartArea: false }, min: 0 }
+        })
+      }
+    });
+  }
+
+  /* Chart 11: Cross-strait table */
+  var html = '<table><thead><tr><th>年度</th><th>對中出口</th><th>總出口</th><th>出口依賴度</th><th>對中進口</th><th>總進口</th><th>進口依賴度</th><th>對中順差</th></tr></thead><tbody>';
+  for (var yi = years.length - 1; yi >= 0; yi--) {
+    var y = years[yi];
+    var dd = yearly[y];
+    var exR = dd.totalEx > 0 ? (dd.chinaEx / dd.totalEx * 100) : 0;
+    var imR = dd.totalIm > 0 ? (dd.chinaIm / dd.totalIm * 100) : 0;
+    var sp = (dd.chinaEx - dd.chinaIm) / 1000000;
+    html += '<tr>' +
+      '<td>' + y + '</td>' +
+      '<td>' + (dd.chinaEx / 1000000).toFixed(1) + 'B</td>' +
+      '<td>' + (dd.totalEx / 1000000).toFixed(1) + 'B</td>' +
+      '<td class="' + (exR > 35 ? 'down' : '') + '">' + exR.toFixed(1) + '%</td>' +
+      '<td>' + (dd.chinaIm / 1000000).toFixed(1) + 'B</td>' +
+      '<td>' + (dd.totalIm / 1000000).toFixed(1) + 'B</td>' +
+      '<td>' + imR.toFixed(1) + '%</td>' +
+      '<td class="' + (sp >= 0 ? 'up' : 'down') + '">' + (sp >= 0 ? '+' : '') + sp.toFixed(1) + 'B</td>' +
+      '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('cs-table').innerHTML = html;
+
+  /* Chart 19: Surplus trend - China vs total */
+  var chinaSurplus = years.map(function(y) { return (yearly[y].chinaEx - yearly[y].chinaIm) / 1000000; });
+  var totalSurplus = years.map(function(y) { return (yearly[y].totalEx - yearly[y].totalIm) / 1000000; });
+
+  getChart('csSurplus');
+  charts.csSurplus = new Chart(document.getElementById('chart-cs-surplus'), {
+    type: 'line',
+    data: { labels: years, datasets: [
+      { label: '整體貿易順差', data: totalSurplus, borderColor: '#2563eb', backgroundColor: '#2563eb28', fill: true, tension: 0.35, borderWidth: 2.5 },
+      { label: '對中貿易順差', data: chinaSurplus, borderColor: '#ef4444', backgroundColor: '#ef444428', fill: true, tension: 0.35, borderWidth: 2.5 }
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': US$' + ctx.parsed.y.toFixed(1) + 'B'; } }}},
+      scales: withAxisDefaults({
+        y: { }
+      })
+    }
+  });
+
+  /* Chart 20: Monthly China export */
+  var ccCol = findCol(exportData.countries, ['中國大陸']);
+  var hkCol = findCol(exportData.countries, ['香港']);
+  var monthlyChina = exportData.data.map(function(d) {
+    var val = 0;
+    if (ccCol) val += (d.values[ccCol] || 0);
+    if (hkCol) val += (d.values[hkCol] || 0);
+    return val;
+  });
+
+  getChart('csMonthly');
+  charts.csMonthly = new Chart(document.getElementById('chart-cs-monthly'), {
+    type: 'line',
+    data: { labels: exportData.data.map(function(d) { return d.date; }), datasets: [{
+      label: '月度對中出口（含香港）',
+      data: monthlyChina,
+      borderColor: '#ef4444', backgroundColor: '#ef444418',
+      fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2
+    }]},
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { return fmtB(ctx.parsed.y); } }}},
+      scales: withAxisDefaults({
+        x: { ticks: { maxTicksLimit: 24 }},
+        y: { ticks: { callback: function(v) { return (v / 1000000).toFixed(0) + 'B'; } }}
+      })
+    }
+  });
+
+  /* Chart 21: Alternative market growth */
+  renderAltMarkets();
+}
+
+function renderAltMarkets() {
+  if (!exportData) return;
+  var altCountries = {
+    '東協': ['東協','東南亞國協','ASEAN'],
+    '印度': ['印度'],
+    '美國': ['美國'],
+    '越南': ['越南']
+  };
+
+  var yearlyTotals = getYearlyTotals(exportData);
+  var years = Object.keys(yearlyTotals).map(Number).sort(function(a, b) { return a - b; });
+  if (years.length < 2) return;
+  var growthYears = years.slice(1);
+
+  var datasets = [];
+  var idx = 0;
+  for (var name of Object.keys(altCountries)) {
+    var col = findCol(exportData.countries, altCountries[name]);
+    if (!col) { idx++; continue; }
+    var data = growthYears.map(function(y, i) {
+      var prev = yearlyTotals[years[i]][col] || 0;
+      var curr = yearlyTotals[y][col] || 0;
+      if (prev === 0) return 0;
+      return ((curr - prev) / prev * 100);
+    });
+    datasets.push({
+      label: name, data: data,
+      borderColor: COLORS[idx % COLORS.length], backgroundColor: COLORS_SOFT[idx % COLORS.length],
+      fill: false, tension: 0.35, borderWidth: 2, pointRadius: 2
+    });
+    idx++;
+  }
+
+  getChart('csAlt');
+  charts.csAlt = new Chart(document.getElementById('chart-cs-alt'), {
+    type: 'line',
+    data: { labels: growthYears, datasets: datasets },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%'; } }}},
+      scales: withAxisDefaults({
+        x: { ticks: { maxTicksLimit: 20 }},
+        y: { }
+      })
+    }
+  });
+}
+
+/* ========== Render: Overview (Tab 4) ========== */
+function renderOverview() {
+  if (!exportData || !importData) return;
+
+  var exYearly = getYearlyTotals(exportData);
+  var imYearly = getYearlyTotals(importData);
+  var totalColEx = findCol(exportData.countries, ['總計']);
+  var totalColIm = findCol(importData.countries, ['總計']);
+
+  var years = Object.keys(exYearly).map(Number).sort(function(a, b) { return a - b; });
+
+  var exTotals = years.map(function(y) {
+    if (totalColEx) return (exYearly[y][totalColEx] || 0) / 1000000;
+    var sum = 0; Object.values(exYearly[y]).forEach(function(v) { sum += v; }); return sum / 1000000;
+  });
+  var imTotals = years.map(function(y) {
+    if (totalColIm) return (imYearly[y][totalColIm] || 0) / 1000000;
+    var sum = 0; Object.values(imYearly[y]).forEach(function(v) { sum += v; }); return sum / 1000000;
+  });
+  var surplus = years.map(function(y, i) { return exTotals[i] - imTotals[i]; });
+
+  /* Chart 22: Export + Import bars + surplus line */
+  getChart('ovBalance');
+  charts.ovBalance = new Chart(document.getElementById('chart-ov-balance'), {
+    type: 'bar',
+    data: { labels: years, datasets: [
+      { label: '總出口', data: exTotals, backgroundColor: '#2563eb', borderRadius: 4, yAxisID: 'y' },
+      { label: '總進口', data: imTotals, backgroundColor: '#f97316', borderRadius: 4, yAxisID: 'y' },
+      { label: '貿易順差', data: surplus, type: 'line', borderColor: '#10b981', backgroundColor: '#10b98118', yAxisID: 'y', tension: 0.35, borderWidth: 2.5, pointRadius: 3 }
+    ]},
+    options: {
+      responsive: true, interaction: { mode: 'index' },
+      plugins: { legend: { labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': US$' + ctx.parsed.y.toFixed(1) + 'B'; } }}},
+      scales: withAxisDefaults({
+        y: { }
+      })
+    }
+  });
+
+  /* Chart 23: Top 5 export countries stacked area */
+  var latestYear = years[years.length - 1];
+  var latestData = exYearly[latestYear];
+  var countryTotals = [];
+  for (var name of Object.keys(KEY_COUNTRIES)) {
+    var col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+    if (!col) continue;
+    countryTotals.push({ name: name, col: col, val: latestData[col] || 0 });
+  }
+  countryTotals.sort(function(a, b) { return b.val - a.val; });
+  var top5 = countryTotals.slice(0, 5);
+
+  var top5Datasets = top5.map(function(c, i) {
+    return {
+      label: c.name,
+      data: years.map(function(y) { return (exYearly[y][c.col] || 0) / 1000000; }),
+      backgroundColor: COLORS[i] + '88',
+      borderColor: COLORS[i],
+      borderWidth: 1.5,
+      fill: true
+    };
+  });
+
+  getChart('ovTop5');
+  charts.ovTop5 = new Chart(document.getElementById('chart-ov-top5'), {
+    type: 'line',
+    data: { labels: years, datasets: top5Datasets },
+    options: {
+      responsive: true, interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true }},
+        tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': US$' + ctx.parsed.y.toFixed(1) + 'B'; } }}},
+      scales: withAxisDefaults({
+        x: { ticks: { maxTicksLimit: 20 }},
+        y: { stacked: true, }
+      })
+    }
+  });
+
+  /* Chart 24: Emerging market growth multiplier */
+  var emergingCountries = {
+    '越南': ['越南'], '印度': ['印度'], '菲律賓': ['菲律賓'],
+    '泰國': ['泰國'], '印尼': ['印度尼西亞','印尼'],
+    '墨西哥': ['墨西哥'], '波蘭': ['波蘭'], '捷克': ['捷克']
+  };
+  var baseYear = null, endYear = null;
+  for (var yi = 0; yi < years.length; yi++) {
+    if (years[yi] >= 2014 && !baseYear) baseYear = years[yi];
+  }
+  for (var yi = years.length - 1; yi >= 0; yi--) {
+    if (years[yi] <= 2024) { endYear = years[yi]; break; }
+  }
+  if (!baseYear) baseYear = years[0];
+  if (!endYear) endYear = years[years.length - 1];
+
+  var emLabels = [];
+  var emValues = [];
+  var emColors = [];
+  var ci = 0;
+  for (var name of Object.keys(emergingCountries)) {
+    var col = findCol(exportData.countries, emergingCountries[name]);
+    if (!col) { ci++; continue; }
+    var baseVal = exYearly[baseYear] ? (exYearly[baseYear][col] || 0) : 0;
+    var endVal = exYearly[endYear] ? (exYearly[endYear][col] || 0) : 0;
+    if (baseVal > 0) {
+      var multiplier = endVal / baseVal;
+      emLabels.push(name);
+      emValues.push(parseFloat(multiplier.toFixed(2)));
+      emColors.push(COLORS[ci % COLORS.length]);
+    }
+    ci++;
+  }
+
+  /* Sort descending */
+  var emPairs = emLabels.map(function(l, i) { return { label: l, value: emValues[i], color: emColors[i] }; });
+  emPairs.sort(function(a, b) { return b.value - a.value; });
+
+  getChart('ovEmerging');
+  charts.ovEmerging = new Chart(document.getElementById('chart-ov-emerging'), {
+    type: 'bar',
+    data: { labels: emPairs.map(function(p) { return p.label; }), datasets: [{
+      data: emPairs.map(function(p) { return p.value; }),
+      backgroundColor: emPairs.map(function(p) { return p.color; }),
+      borderRadius: 6, barPercentage: 0.65
+    }]},
+    options: {
+      indexAxis: 'y', responsive: true,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: function(ctx) { return ctx.parsed.x.toFixed(2) + 'x (' + baseYear + ' vs ' + endYear + ')'; } }}},
+      scales: withAxisDefaults({
+        x: { ticks: { callback: function(v) { return v + 'x'; } }}
+      })
+    }
+  });
+}
+
+/* ========== Init ========== */
+async function init() {
+  var loading = document.getElementById('loading');
+  try {
+    var results = await Promise.all([
+      fetchCSV(CSV_EXPORT),
+      fetchCSV(CSV_IMPORT),
+      fetchCSV(CSV_IC)
+    ]);
+
+    exportData = parseTradeByCountry(results[0]);
+    importData = parseTradeByCountry(results[1]);
+    icData = parseICData(results[2]);
+
+    if (!exportData || exportData.data.length === 0) throw new Error('無法解析出口資料');
+    if (!importData || importData.data.length === 0) throw new Error('無法解析進口資料');
+
+    /* Populate pill selector */
+    var pillBox = document.getElementById('trend-countries');
+    var defaults = ['中國大陸', '美國', '日本', '南韓', '新加坡'];
+    var countryNames = Object.keys(KEY_COUNTRIES);
+    for (var i = 0; i < countryNames.length; i++) {
+      var name = countryNames[i];
+      var col = findCol(exportData.countries, KEY_COUNTRIES[name]);
+      if (!col) continue;
+      var pill = document.createElement('span');
+      pill.className = 'pill' + (defaults.includes(name) ? ' active' : '');
+      pill.dataset.country = name;
+      pill.innerHTML = '<span class="dot" style="background:' + COLORS[i % COLORS.length] + '"></span>' + name;
+      pill.addEventListener('click', function() { this.classList.toggle('active'); renderTrend(); });
+      pillBox.appendChild(pill);
+    }
+
+    loading.style.display = 'none';
+
+    /* Tab 1 */
+    renderTrend();
+    renderShare();
+    renderRegionShare();
+    renderHHI();
+    renderHeatmap();
+    renderYoYCompare();
+
+    /* Tab 2 */
+    renderSemiconductor();
+
+    /* Tab 3 */
+    renderCrossStrait();
+
+    /* Tab 4 */
+    renderOverview();
+  } catch (err) {
+    loading.innerHTML = '<div class="error-box">⚠️ 資料載入失敗：' + err.message + '<br><small>請確認網路連線或 GCS CORS 設定。</small></div>';
+    console.error(err);
+  }
+}
+
+init();
+</script>
+
+<script>document.querySelectorAll(".current-year").forEach(function (el) { el.textContent = new Date().getFullYear(); });</script>
+
+<footer class="open-source-attribution" style="padding:24px;text-align:center"><a href="https://upliftorch.com/">Upliftorch</a> · <a href="https://upliftorch.com/tools/trade-analysis/">Official demo / 線上工具</a></footer>
+</body>
+</html>
